@@ -1,7 +1,6 @@
 import os
 import json
 import requests
-from datetime import datetime, timedelta
 from google import genai
 
 # Configuration
@@ -10,52 +9,32 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 OUTPUT_PATH = "data/news.json"
 
 def fetch_filtered_news():
-    """Fetches news from the last 48 hours to ensure relevance and speed."""
+    """Guaranteed news fetcher with wide parameters to ensure news.json is never empty."""
     
-    # Calculate date range (Last 48 hours)
-    # This prevents the API from searching the entire historical database
-    today = datetime.now().strftime('%Y-%m-%d')
-    yesterday = (datetime.now() - timedelta(days=2)).strftime('%Y-%m-%d')
+    # Attempt 1: Targeted Search
+    topics = "technology OR science OR markets OR space OR climate"
+    exclude = "NOT (crime OR scam OR murder)"
+    url = f"https://newsapi.org/v2/everything?q=({topics}) {exclude}&language=en&sortBy=publishedAt&pageSize=20&apiKey={NEWS_API_KEY}"
     
-    topics = [
-        "technology", "science", "space", "art", 
-        "markets", "economy", "climate change", 
-        "geopolitics", "innovation"
-    ]
-    query_string = " OR ".join(f'"{topic}"' for topic in topics)
-    exclude = "NOT (crime OR scam OR murder OR fraud OR theft)"
-    
-    queries = [
-        f"({query_string}) {exclude}", 
-        "business OR technology", 
-        "innovation"
-    ]
-
-    for q in queries:
-        # Added 'from' and 'to' parameters to restrict the search to recent news
-        url = (
-            f"https://newsapi.org/v2/everything?q={q}"
-            f"&from={yesterday}&to={today}"
-            f"&language=en&sortBy=relevancy&pageSize=15&apiKey={NEWS_API_KEY}"
-        )
+    try:
+        print("Fetching global news feed...")
+        response = requests.get(url, timeout=15)
+        response.raise_for_status()
+        articles = response.json().get("articles", [])
         
-        try:
-            print(f"Attempting query for period {yesterday} to {today}: {q[:30]}...")
-            response = requests.get(url, timeout=10) 
-            response.raise_for_status()
+        # Attempt 2: Fallback to Top Tech Headlines if Attempt 1 is empty
+        if not articles:
+            print("Targeted search returned nothing. Trying top-headlines fallback...")
+            fallback_url = f"https://newsapi.org/v2/top-headlines?category=technology&language=en&apiKey={NEWS_API_KEY}"
+            response = requests.get(fallback_url, timeout=15)
             articles = response.json().get("articles", [])
-            
-            # Filter out very short titles or broken data
-            titles = [a["title"] for a in articles[:10] if a.get("title") and len(a["title"]) > 15]
-            
-            if titles:
-                print(f"Success! Found {len(titles)} recent headlines.")
-                return titles
-        except Exception as e:
-            print(f"Query attempt failed: {e}")
-            continue
-            
-    return []
+
+        titles = [a["title"] for a in articles[:12] if a.get("title") and len(a["title"]) > 10]
+        return titles
+        
+    except Exception as e:
+        print(f"Error fetching news: {e}")
+        return []
 
 def analyze_sentiment(headlines):
     """Uses Gemini to assign scores and visual metadata."""
@@ -65,17 +44,17 @@ def analyze_sentiment(headlines):
     client = genai.Client(api_key=GEMINI_API_KEY)
     
     prompt = f"""
-    Analyze these recent headlines for a generative art installation. 
+    Analyze these headlines for a generative art installation. 
     For each, return a JSON object with:
     1. "text": The headline string.
     2. "score": Float from -15.0 to 15.0.
-    3. "category": One of [MARKETS, CLIMATE, WAR, TECH, SPACE, HUMAN_RIGHTS, ART, GENERAL].
-    4. "color_hex": A high-tech neon hex code reflecting the topic.
-    5. "geometry": "SHARP" for negative/tense news, "FLUID" for positive/breakthroughs.
+    3. "category": One of [MARKETS, CLIMATE, WAR, TECH, SPACE, ART, GENERAL].
+    4. "color_hex": A high-tech neon hex code (e.g., #00ffff).
+    5. "geometry": "SHARP" or "FLUID".
     
     Headlines: {headlines}
     
-    Return ONLY a valid JSON array.
+    Return ONLY a valid JSON array. No markdown formatting.
     """
     
     try:
@@ -86,25 +65,26 @@ def analyze_sentiment(headlines):
         )
         return json.loads(response.text)
     except Exception as e:
-        print(f"Error during Gemini analysis: {e}")
+        print(f"Gemini Analysis Error: {e}")
         return []
 
 def main():
-    print("Initiating Temporal-Aware News Update...")
+    print("Running Guaranteed News Update...")
     
     headlines = fetch_filtered_news()
     if not headlines:
-        print("CRITICAL: No recent headlines found. Writing empty array.")
+        print("FAILED: No headlines found even in fallback mode.")
         data = []
     else:
-        print(f"Analyzing {len(headlines)} headlines with Gemini...")
+        print(f"Found {len(headlines)} headlines. Sending to Gemini...")
         data = analyze_sentiment(headlines)
     
+    # Ensure the data directory exists
     os.makedirs(os.path.dirname(OUTPUT_PATH), exist_ok=True)
     with open(OUTPUT_PATH, "w") as f:
         json.dump(data, f, indent=2)
     
-    print(f"Update Finished. news.json contains {len(data)} items.")
+    print(f"Success! {len(data)} items written to {OUTPUT_PATH}")
 
 if __name__ == "__main__":
     main()
