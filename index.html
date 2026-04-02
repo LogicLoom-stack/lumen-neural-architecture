@@ -3,288 +3,85 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lumen: Neural Architecture V4</title>
+  <title>Lumen: Neural Architecture V5</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
     :root {
-      --tech-cyan: #00ffcc;
-      --tech-red: #ff3232;
-      --tech-gold: #ffd700;
+      --current-accent: #00ffcc;
+      --bg-deep: #020305;
     }
-    body { margin: 0; padding: 0; overflow: hidden; background-color: #050608; font-family: 'Courier New', monospace; }
+    body { margin: 0; padding: 0; overflow: hidden; background-color: var(--bg-deep); font-family: 'Courier New', monospace; }
     canvas { display: block; }
     
     #logic-terminal {
       position: fixed;
-      left: 60px;
+      left: 50px;
       top: 50%;
       transform: translateY(-50%);
-      width: 440px;
+      width: 480px;
       z-index: 100;
       pointer-events: none;
-      border-left: 2px solid var(--tech-cyan);
-      padding: 20px 0 20px 30px;
-      display: flex;
-      flex-direction: column;
-      background: linear-gradient(90deg, rgba(0, 255, 204, 0.05) 0%, transparent 100%);
+      border-left: 1px solid var(--current-accent);
+      padding: 30px 0 30px 40px;
+      background: linear-gradient(90deg, rgba(var(--accent-rgb), 0.1) 0%, transparent 100%);
+      transition: border-color 1s ease;
     }
 
-    .news-section { margin-bottom: 30px; position: relative; }
     .label-tech { 
-      font-size: 11px; 
-      color: var(--tech-cyan); 
+      font-size: 10px; 
+      color: var(--current-accent); 
       text-transform: uppercase; 
-      letter-spacing: 4px; 
-      margin-bottom: 12px; 
-      opacity: 0.7; 
+      letter-spacing: 5px; 
+      margin-bottom: 15px; 
+      opacity: 0.6; 
     }
     
     #news-display { 
-      font-size: 24px; 
-      line-height: 1.2; 
+      font-size: 26px; 
+      line-height: 1.1; 
       color: #ffffff; 
       font-weight: 900; 
       text-transform: uppercase; 
-      min-height: 80px;
-      position: relative;
+      min-height: 100px;
       letter-spacing: 1px;
+      text-shadow: 0 0 10px rgba(255,255,255,0.2);
     }
 
-    .data-row { display: flex; align-items: center; gap: 15px; margin-bottom: 8px; }
-    .value-num { font-size: 14px; color: #ffffff; font-weight: bold; font-family: monospace; }
+    .metric-group { margin-top: 30px; border-top: 1px solid rgba(255,255,255,0.1); pt: 20px; }
+    .data-row { display: flex; align-items: center; gap: 20px; margin-bottom: 10px; }
+    .value-num { font-size: 14px; color: #ffffff; font-weight: bold; font-family: 'Courier New', monospace; }
     
-    .system-footer {
-      margin-top: 40px;
-      font-size: 9px;
-      color: var(--tech-cyan);
-      opacity: 0.3;
-      letter-spacing: 3px;
+    .category-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      background: var(--current-accent);
+      color: #000;
+      font-size: 10px;
+      font-weight: bold;
+      margin-bottom: 20px;
+      letter-spacing: 2px;
     }
 
-    .crt-overlay {
+    /* CRT/Scanline Overlays */
+    .overlay-vignette {
       position: fixed;
       inset: 0;
-      background: repeating-linear-gradient(rgba(18, 16, 16, 0) 0, rgba(0, 0, 0, 0.08) 50%, rgba(18, 16, 16, 0) 100%);
-      background-size: 100% 4px;
+      background: radial-gradient(circle, transparent 40%, rgba(0,0,0,0.6) 100%);
+      z-index: 150;
+      pointer-events: none;
+    }
+    .scanlines {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+      background-size: 100% 3px, 3px 100%;
       z-index: 200;
       pointer-events: none;
     }
   </style>
 </head>
 <body>
-  <div class="crt-overlay"></div>
-  <div id="logic-terminal">
-    <div class="news-section">
-      <div class="label-tech" id="status-label">INITIALIZING_CORE...</div>
-      <div id="news-display">READY_FOR_UPLINK</div>
-    </div>
-    <div class="data-row"><div class="label-tech">SENTIMENT:</div><div id="ml-score" class="value-num">0.00</div></div>
-    <div class="data-row"><div class="label-tech">LOAD:</div><div id="ml-load" class="value-num">0%</div></div>
-    <div class="data-row"><div class="label-tech">ENTROPY:</div><div id="ml-entropy" class="value-num">0.000</div></div>
-    <div class="data-row"><div class="label-tech">CONF:</div><div id="ml-conf" class="value-num">0.0%</div></div>
-    <div class="system-footer">ARCHITECTURE: NEURAL_LUMEN_V4 // AUTO_DATA_READY</div>
-  </div>
-
-  <script>
-    let intensity = 0.2, targetIntensity = 0.2;
-    let bgSpeed = 0.001, targetSpeed = 0.001;
-    let globalColorOverride = [51, 51, 51]; 
-    let isRainbowMode = false; 
-    let isInitialized = false;
-
-    const originalColors = [[255,50,50],[255,105,180],[255,215,0],[0,255,120],[0,180,255],[176,191,26],[200,80,255]];
-    let currentChakraColors = [[51,51,51],[51,51,51],[51,51,51],[51,51,51],[51,51,51],[51,51,51],[51,51,51]];
-    const petalCounts = [4, 6, 10, 12, 16, 2, 80]; 
-    const anatomicalY = [340, 230, 120, 10, -100, -210, -320];
-
-    let newsDiv, scoreDiv, loadDiv, entropyDiv, confDiv, statusLabel;
-    let tickerAlpha = 0, fadeState = "IN", stayCounter = 0, currentNewsIndex = 0;
-    
-    let currentFullText = "";
-    let typedIndex = 0;
-    let typingSpeed = 2; 
-
-    let newsItems = [
-      { text: "System synchronizing with global data layers", score: 0.00, type: "NEUTRAL" }
-    ];
-
-    async function fetchData() {
-      try {
-        const response = await fetch('data/news.json');
-        if (!response.ok) throw new Error("Local file not found");
-        
-        const data = await response.json();
-        newsItems = data;
-        
-        if(statusLabel) statusLabel.innerHTML = "LIVE_DATA_UPLINK_SUCCESS";
-      } catch (e) {
-        newsItems = [
-          { text: "Global economy shows tenuous resilience", score: 2.15, type: "NEUTRAL" },
-          { text: "Ceasefire negotiations signal potential peace", score: 14.80, type: "HIGH_POS" },
-          { text: "Agentic AI systems transforming labor", score: 4.50, type: "NEUTRAL" },
-          { text: "Geopolitical tensions rise over resources", score: -11.20, type: "HIGH_NEG" },
-          { text: "Renewable breakthrough: efficiency record hit", score: 15.00, type: "HIGH_POS" }
-        ];
-        if(statusLabel) statusLabel.innerHTML = "USING_INTERNAL_BUFFER";
-      }
-      currentFullText = newsItems[0].text;
-    }
-
-    function setup() {
-      createCanvas(windowWidth, windowHeight, WEBGL);
-      setAttributes('antialias', true);
-      
-      newsDiv = document.getElementById('news-display');
-      scoreDiv = document.getElementById('ml-score');
-      loadDiv = document.getElementById('ml-load');
-      entropyDiv = document.getElementById('ml-entropy');
-      confDiv = document.getElementById('ml-conf');
-      statusLabel = document.getElementById('status-label');
-      
-      fetchData();
-    }
-
-    function draw() {
-      background(5, 6, 8); 
-      intensity = lerp(intensity, targetIntensity, 0.02);
-      bgSpeed = lerp(bgSpeed, targetSpeed, 0.02);
-      
-      updateTerminalLogic();
-      
-      translate(width * 0.15, 0, -200); 
-
-      for (let i = 0; i < 7; i++) {
-        push();
-        translate(0, anatomicalY[i], 0);
-        let phase = frameCount * 0.01 + (i * 0.8);
-        let pulse = sin(phase);
-
-        let target = isRainbowMode ? originalColors[i] : globalColorOverride;
-        for(let c=0; c<3; c++) {
-          currentChakraColors[i][c] = lerp(currentChakraColors[i][c], target[c], 0.02);
-        }
-        let activeColor = currentChakraColors[i];
-
-        push();
-        noFill(); stroke(51, 51, 51, 15); strokeWeight(0.5);
-        rotateZ(frameCount * -0.002);
-        ellipse(0, 0, 195 + pulse * 4);
-        pop();
-
-        push();
-        rotateY(frameCount * bgSpeed + (i * 0.12));
-        noFill(); 
-        stroke(activeColor[0], activeColor[1], activeColor[2], 200);
-        strokeWeight(1.8 + intensity * 1.2); 
-        
-        for (let j = 0; j < 3; j++) {
-          let r = 65 + (j * 18); 
-          beginShape();
-          for (let a = 0; a < TWO_PI; a += 0.1) {
-            let rd = r + (sin(a * petalCounts[i]) * 8) + (pulse * 2);
-            vertex(rd * cos(a), rd * sin(a), cos(phase + a) * (intensity * 12));
-          }
-          endShape(CLOSE);
-        }
-        pop();
-
-        push();
-        fill(activeColor[0], activeColor[1], activeColor[2], 140);
-        noStroke(); 
-        rotateZ(frameCount * 0.012);
-        renderYantra(i, 22);
-        pop();
-        pop();
-      }
-    }
-
-    function renderYantra(idx, sz) {
-      if(idx == 0) box(sz);
-      else if(idx == 1) { rotateZ(HALF_PI); arc(0, 0, sz * 1.8, sz * 1.8, 0, PI); }
-      else if(idx == 2) drawTri(sz, true);
-      else if(idx == 3) { drawTri(sz, true); drawTri(sz, false); }
-      else if(idx == 4) { ellipse(0, 0, sz * 1.4, sz * 1.4); drawTri(sz * 0.7, true); }
-      else if(idx == 5) drawTri(sz * 1.2, true);
-      else sphere(sz/1.2, 24, 24);
-    }
-
-    function drawTri(sz, inv) {
-      beginShape();
-      let m = inv ? 1 : -1;
-      vertex(0, sz * m); 
-      vertex(-0.86 * sz, -0.5 * sz * m); 
-      vertex(0.86 * sz, -0.5 * sz * m);
-      endShape(CLOSE);
-    }
-
-    function updateTerminalLogic() {
-      if (!newsItems || newsItems.length === 0) return;
-      let currentItem = newsItems[currentNewsIndex];
-      
-      if (fadeState === "IN") {
-        tickerAlpha += 0.03; 
-        
-        if (frameCount % typingSpeed === 0 && typedIndex < currentItem.text.length) {
-          typedIndex += 1; 
-        }
-
-        if (typedIndex === 1) {
-          updateStateFromNews(currentItem);
-          isInitialized = true;
-        }
-
-        if (tickerAlpha >= 1 && typedIndex >= currentItem.text.length) { 
-          fadeState = "STAY"; 
-          if(statusLabel) statusLabel.innerHTML = "SYSTEM_STATE: STABLE";
-        }
-      } else if (fadeState === "STAY") {
-        stayCounter++;
-        if (stayCounter > 300) { 
-          fadeState = "OUT"; 
-          stayCounter = 0; 
-        }
-      } else if (fadeState === "OUT") {
-        tickerAlpha -= 0.05;
-        
-        if (tickerAlpha <= 0) {
-          currentNewsIndex = (currentNewsIndex + 1) % newsItems.length;
-          currentFullText = newsItems[currentNewsIndex].text;
-          typedIndex = 0;
-          fadeState = "IN";
-          if(statusLabel) statusLabel.innerHTML = "FETCHING_NEXT_PACKET...";
-        }
-      }
-
-      if(newsDiv) { 
-        newsDiv.innerHTML = isInitialized ? currentFullText.substring(0, typedIndex) + (typedIndex < currentFullText.length ? "_" : "") : "READY_FOR_UPLINK"; 
-        newsDiv.style.opacity = tickerAlpha || (isInitialized ? 0 : 0.5); 
-        newsDiv.style.transform = `translateX(${(1 - tickerAlpha) * -10}px)`;
-      }
-      
-      if(scoreDiv) scoreDiv.innerHTML = (tickerAlpha > 0.5 ? (currentItem.score > 0 ? "+" : "") + currentItem.score.toFixed(2) : "---");
-      if(loadDiv) loadDiv.innerHTML = Math.floor(intensity * 100) + "%";
-      if(entropyDiv) entropyDiv.innerHTML = (1.15 + noise(frameCount * 0.02) * 0.5).toFixed(3);
-      if(confDiv) confDiv.innerHTML = (99.8 - (intensity * 8)).toFixed(1) + "%";
-    }
-
-    function updateStateFromNews(item) {
-      targetIntensity = map(abs(item.score), 0, 15, 0.4, 1.2);
-      targetSpeed = map(abs(item.score), 0, 15, 0.001, 0.006);
-
-      if (item.type === "HIGH_POS") {
-        isRainbowMode = true; 
-      } else if (item.type === "NEUTRAL") {
-        isRainbowMode = false;
-        globalColorOverride = [255, 215, 0]; 
-      } else if (item.type === "HIGH_NEG") {
-        isRainbowMode = false;
-        globalColorOverride = [255, 50, 50];
-      }
-    }
-
-    function windowResized() {
-      resizeCanvas(windowWidth, windowHeight);
-    }
-  </script>
-</body>
-</html>
+  <div class="overlay-vignette"></div>
+  <div class="scanlines"></div>
+  
+  <div id="logic
