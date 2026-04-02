@@ -58,8 +58,9 @@ def analyze_sentiment(headlines):
     """
     
     try:
+        # Changed model to a more standard identifier to fix the 404 error
         response = client.models.generate_content(
-            model="gemini-2.5-flash-preview-09-2025",
+            model="gemini-2.0-flash",
             contents=prompt,
             config={"response_mime_type": "application/json"}
         )
