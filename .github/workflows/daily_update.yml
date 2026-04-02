@@ -5,6 +5,10 @@ on:
     - cron: '0 0 * * *' # Runs every day at midnight
   workflow_dispatch: # Allows you to run it manually for testing
 
+# This block is CRITICAL for exit code 128 - it gives the robot permission to write files
+permissions:
+  contents: write
+
 jobs:
   update-data:
     runs-on: ubuntu-latest
@@ -15,7 +19,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.9'
+          python-version: '3.10'
 
       - name: Install Dependencies
         run: |
@@ -30,8 +34,8 @@ jobs:
 
       - name: Commit and Push
         run: |
-          git config --global user.name "NewsBot"
-          git config --global user.email "bot@github.com"
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add data/news.json
-          git commit -m "Daily sentiment update" || echo "No changes"
+          git commit -m "Daily sentiment update" || echo "No changes to commit"
           git push
