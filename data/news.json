@@ -1,20 +1,47 @@
 [
   {
-    "text": "Courtney Love urges Dave Grohl to publicly squash their years-long feud: \u2018Be man enough to man up\u2019",
+    "text": "Big Tech Shouldn\u2019t Be Writing the Rules",
+    "score": -6,
+    "color_shift": 0.8
+  },
+  {
+    "text": "Where does Big 12 rank in ESPN's SP+?",
+    "score": 0,
+    "color_shift": 0.2
+  },
+  {
+    "text": "Libyan military leader may have combat",
+    "score": -7,
+    "color_shift": 0.9
+  },
+  {
+    "text": "Adagene Announces Clinical Collaborati",
+    "score": 1,
+    "color_shift": 0.1
+  },
+  {
+    "text": "Trump offers few answers on Iran and",
     "score": -2,
-    "category": "ENTERTAINMENT",
-    "color_hex": "#8A2BE2"
+    "color_shift": 0.7
   },
   {
-    "text": "realme 16 5G unveiled",
+    "text": "Blend\u2019s post-IPO reset: CEO bets that AI",
+    "score": 6,
+    "color_shift": 0.6
+  },
+  {
+    "text": "'I was lynched': Why astronaut Payette",
+    "score": -9,
+    "color_shift": 0.95
+  },
+  {
+    "text": "Dynamic Island Finally Changing: iPhone",
+    "score": 5,
+    "color_shift": 0.5
+  },
+  {
+    "text": "The art of medicine and clinical reason",
     "score": 4,
-    "category": "TECH",
-    "color_hex": "#008000"
-  },
-  {
-    "text": "WhatsApp Alerts 200 Users After Fake iOS App Installed Spyware; Italian Firm Faces Action",
-    "score": -8,
-    "category": "CYBERSECURITY",
-    "color_hex": "#FF0000"
+    "color_shift": 0.2
   }
 ]
