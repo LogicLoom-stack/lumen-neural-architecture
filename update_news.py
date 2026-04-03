@@ -62,9 +62,9 @@ def analyze_sentiment(headlines):
     max_retries = 3
     for attempt in range(max_retries):
         try:
-            # Switched to gemini-1.5-flash as it is currently the most stable for free-tier automation
+            # Updated model name to 'gemini-1.5-flash-latest' to resolve 404 NOT_FOUND errors
             response = client.models.generate_content(
-                model="gemini-1.5-flash",
+                model="gemini-1.5-flash-latest",
                 contents=prompt,
                 config=types.GenerateContentConfig(
                     response_mime_type="application/json",
