@@ -38,7 +38,7 @@ def fetch_filtered_news():
         return []
 
 def analyze_sentiment(headlines):
-    """Analyzes a small batch of headlines in one single request with high retry stability."""
+    """Analyzes headlines with increased initial wait and aggressive backoff for Free Tier."""
     if not headlines:
         return []
         
@@ -46,14 +46,18 @@ def analyze_sentiment(headlines):
     
     # Ultra-compact prompt for free tier reliability
     prompt = f"""
-    Analyze these 5 headlines for an art project. 
+    Analyze these headlines for an art project. 
     Return a JSON array of objects:
     [{{"text": "headline", "score": -15 to 15, "category": "TECH", "color_hex": "#00ffff", "geometry": "FLUID"}}]
     
     Headlines: {headlines}
     """
     
-    max_retries = 3
+    # Pre-emptive wait: Sometimes the API needs a second to 'reset' before the first call
+    print("Cooling down for 5 seconds before Gemini request...")
+    time.sleep(5)
+    
+    max_retries = 5
     for attempt in range(max_retries):
         try:
             # gemini-2.0-flash-lite is the best for high-frequency free tier usage
@@ -62,15 +66,16 @@ def analyze_sentiment(headlines):
                 contents=prompt,
                 config=types.GenerateContentConfig(
                     response_mime_type="application/json",
-                    temperature=0.2 
+                    temperature=0.1 
                 )
             )
             return json.loads(response.text)
             
         except Exception as e:
-            if "429" in str(e):
-                wait_time = 15 # Longer wait for free tier cooling
-                print(f"Rate limit hit. Waiting {wait_time}s before retry...")
+            if "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e).upper():
+                # Exponential backoff: 30s, 60s, 90s...
+                wait_time = (attempt + 1) * 30
+                print(f"Rate limit hit. Waiting {wait_time}s before retry {attempt + 1}/{max_retries}...")
                 time.sleep(wait_time)
             else:
                 print(f"Gemini Error: {e}")
