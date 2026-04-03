@@ -38,7 +38,7 @@ def fetch_filtered_news():
         return []
 
 def analyze_sentiment(headlines):
-    """Analyzes headlines with increased initial wait and aggressive backoff for Free Tier."""
+    """Analyzes headlines with a strict 'Safety Minute' for Free Tier reliability."""
     if not headlines:
         return []
         
@@ -53,16 +53,18 @@ def analyze_sentiment(headlines):
     Headlines: {headlines}
     """
     
-    # Pre-emptive wait: Sometimes the API needs a second to 'reset' before the first call
-    print("Cooling down for 5 seconds before Gemini request...")
-    time.sleep(5)
+    # FREE TIER STRATEGY:
+    # Most free tiers allow 1-2 requests per minute. 
+    # By waiting 65 seconds upfront, we guarantee we start in a clean window.
+    print("Initiating 65-second 'Safety Minute' to clear Free Tier quota...")
+    time.sleep(65)
     
-    max_retries = 5
+    max_retries = 3
     for attempt in range(max_retries):
         try:
-            # gemini-2.0-flash-lite is the best for high-frequency free tier usage
+            # Switched to gemini-1.5-flash as it is currently the most stable for free-tier automation
             response = client.models.generate_content(
-                model="gemini-2.0-flash-lite",
+                model="gemini-1.5-flash",
                 contents=prompt,
                 config=types.GenerateContentConfig(
                     response_mime_type="application/json",
@@ -73,9 +75,9 @@ def analyze_sentiment(headlines):
             
         except Exception as e:
             if "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e).upper():
-                # Exponential backoff: 30s, 60s, 90s...
-                wait_time = (attempt + 1) * 30
-                print(f"Rate limit hit. Waiting {wait_time}s before retry {attempt + 1}/{max_retries}...")
+                # On Free Tier, a 429 means you must wait for the next minute.
+                wait_time = 70 
+                print(f"Rate limit still active. Waiting {wait_time}s for next quota window... (Attempt {attempt + 1}/{max_retries})")
                 time.sleep(wait_time)
             else:
                 print(f"Gemini Error: {e}")
@@ -84,14 +86,14 @@ def analyze_sentiment(headlines):
     return []
 
 def main():
-    print("--- STARTING MINIMALIST NEURAL UPDATE ---")
+    print("--- STARTING MINIMALIST NEURAL UPDATE (FREE TIER MODE) ---")
     
     headlines = fetch_filtered_news()
     if not headlines:
         print("FAILED: No headlines retrieved.")
         data = []
     else:
-        print(f"Processing {len(headlines)} headlines (Low Volume Mode)...")
+        print(f"Processing {len(headlines)} headlines...")
         data = analyze_sentiment(headlines)
     
     # Create directory if it doesn't exist
@@ -102,7 +104,7 @@ def main():
     if data:
         print(f"SUCCESS: {len(data)} items saved to {OUTPUT_PATH}")
     else:
-        print("ERROR: Data was not processed. Check API logs.")
+        print("ERROR: Data was not processed. Please wait 2-3 minutes before running the action again manually.")
 
 if __name__ == "__main__":
     main()
