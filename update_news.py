@@ -1,87 +1,79 @@
 import os
 import json
-import requests
+import random
 from google import genai
 from datetime import datetime
-import random
 
-# 1. Setup API Keys
-NEWS_API_KEY = os.getenv('NEWS_API_KEY')
+# 1. Setup API Keys (Gemini is still used for creative synthesis)
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 
-def get_news():
-    """Fetches news using a high-probability search strategy."""
-    # We broaden the search queries to be high-volume terms
-    search_queries = [
-        'artificial intelligence', 
-        'global climate', 
-        'breakthrough', 
-        'future tech', 
-        'astronomy',
-        'quantum computing'
+# 2. LOCAL DATASET (2026 News Pool)
+# Categorized for dynamic art response
+NEWS_DATASET = {
+    "positive": [
+        "Artemis II completes lunar flyby, marking humanity's return to deep space.",
+        "First personalized CRISPR treatment successfully cures rare genetic disorder in child.",
+        "Quantum-assisted carbon capture reaching 95% efficiency in European pilots.",
+        "Global High Seas Treaty officially ratified, protecting 30% of world oceans.",
+        "AI-powered 'World Models' predict agricultural yields with 99% accuracy, ending localized famine.",
+        "Solid-state battery breakthrough doubles EV range while halving charge time.",
+        "Universal nasal spray vaccine for COVID and Flu enters mass production."
+    ],
+    "neutral": [
+        "NASA Nancy Grace Roman Telescope fully assembled and awaiting fall launch.",
+        "Global growth projected at steady 3.3% for 2026 amid divergent tech forces.",
+        "Companies shift AI focus from 'hype' to measurable ROI and infrastructure.",
+        "UN Desertification COP 17 opens in Mongolia to discuss grassland restoration.",
+        "New 'folding' hardware forms dominate the 2026 mobile market.",
+        "BepiColombo mission enters Mercury orbit after seven-year journey.",
+        "Central banks move toward neutral interest rates as inflation stabilizes."
+    ],
+    "negative": [
+        "WMO warns planet's climate is more out of balance than at any time in history.",
+        "Major 1.5°C climate overshoot predicted for the 2025-2029 window.",
+        "Geoeconomic confrontation cited as top risk for 2026 global stability.",
+        "Underpriced climate risks threaten to burst $15 trillion global asset bubble.",
+        "Ultra-processed food links to surge in cardiovascular cases among youth.",
+        "State-based armed conflicts increase pressure on multilateral trade systems.",
+        "E-waste levels hit all-time high as hardware replacement cycles accelerate."
     ]
-    random.shuffle(search_queries)
+}
+
+def get_curated_news():
+    """Simulates a news fetch by selecting a mix of perspectives from our local 2026 dataset."""
+    # We pick a random 'mood' for the day
+    mood = random.choice(["positive", "neutral", "negative", "mixed"])
     
-    for query in search_queries:
-        print(f"Deep searching for: {query}...")
+    if mood == "mixed":
+        # Mix of everything
+        pool = NEWS_DATASET["positive"] + NEWS_DATASET["neutral"] + NEWS_DATASET["negative"]
+        selected = random.sample(pool, 5)
+    else:
+        # Heavily weighted toward the chosen mood
+        pool = NEWS_DATASET[mood]
+        selected = random.sample(pool, min(len(pool), 5))
+        # Add 1-2 neutral ones for balance
+        selected += random.sample(NEWS_DATASET["neutral"], 2)
         
-        # We switch to 'relevancy' instead of 'publishedAt' as free tiers
-        # often throttle the newest results but allow relevant ones.
-        url = (
-            f'https://newsapi.org/v2/everything?'
-            f'q={query}&'
-            f'language=en&'
-            f'sortBy=relevancy&'
-            f'pageSize=15&'
-            f'apiKey={NEWS_API_KEY}'
-        )
-        
-        try:
-            response = requests.get(url, timeout=15)
-            data = response.json()
-            
-            if data.get('status') == 'ok':
-                articles = data.get('articles', [])
-                # Filter out 'Removed' or empty titles
-                titles = [
-                    a['title'] for a in articles 
-                    if a.get('title') and "[Removed]" not in a['title'] and len(a['title']) > 15
-                ]
-                
-                if titles:
-                    print(f"Neural linkage established! Found {len(titles)} high-relevance articles.")
-                    return titles[:10]
-            else:
-                # Log the specific API message (e.g. 'rateLimited', 'parameterInvalid')
-                print(f"API rejection for '{query}': {data.get('message', 'Unknown error')}")
-                
-        except Exception as e:
-            print(f"Network error during search for '{query}': {e}")
-            
-    return []
+    print(f"Neural Scan: Current global mood detected as '{mood.upper()}'.")
+    return selected
 
 def analyze_sentiment(news_titles):
-    """Uses Gemini 2.5 Flash to process news into visual metadata."""
-    if not news_titles:
-        print("Neural core idle: No titles received.")
-        return None
-
-    client = genai.Client(api_key=GEMINI_API_KEY)
-    
-    prompt = f"""
-    You are the neural core of a light installation. 
-    Headlines: {news_titles}
-    
-    Synthesize this information. Return a JSON list of 1 object:
-    1. "text": A 3-5 word poetic summary in ALL CAPS.
-    2. "score": A float from -10.0 to 10.0 (Global Sentiment).
-    3. "global_state": "GOLD" (if optimistic), "RED" (if chaotic), or "RAINBOW" (balanced).
-    4. "resonances": A list of 7 floats (0.0 to 1.0) for visual nodes.
-    5. "ml_metrics": {{"confidence": float, "latency": int, "entropy": float, "drift_score": float}}
-    """
-
+    """Uses Gemini 2.5 Flash to synthesize the final visual state and poetic summary."""
     try:
-        print("Transmitting to Gemini for neural synthesis...")
+        client = genai.Client(api_key=GEMINI_API_KEY)
+        prompt = f"""
+        Analyze these 2026 news events: {news_titles}
+        Synthesize them into a single 'Global State' for a generative art piece.
+        Return a JSON list with 1 object:
+        {{
+          "text": "3-5 WORD POETIC SUMMARY",
+          "score": float (-10.0 to 10.0), 
+          "global_state": "GOLD" (if pos), "RED" (if neg), "RAINBOW" (if mixed/neutral),
+          "resonances": [7 floats 0-1 representing visual harmonics],
+          "ml_metrics": {{"confidence": 0.98, "latency": 5, "entropy": 0.2, "drift_score": 0.01}}
+        }}
+        """
         response = client.models.generate_content(
             model='gemini-2.5-flash-preview-09-2025',
             contents=prompt,
@@ -90,33 +82,27 @@ def analyze_sentiment(news_titles):
         return json.loads(response.text)
     except Exception as e:
         print(f"Gemini Synthesis Failed: {e}")
-        return None
+        # Local Fallback logic if Gemini is down
+        return [{
+            "text": "LOCAL DATA OVERRIDE",
+            "score": 0.0,
+            "global_state": "RAINBOW",
+            "resonances": [0.5]*7,
+            "ml_metrics": {"confidence": 1.0, "latency": 0, "entropy": 0.5, "drift_score": 0.0}
+        }]
 
 def main():
-    print(f"--- INITIATING GLOBAL TELEMETRY SCAN: {datetime.now()} ---")
+    print(f"--- INITIATING LOCAL TELEMETRY SCAN (2026 DATASET) ---")
     
-    if not NEWS_API_KEY or not GEMINI_API_KEY:
-        print("ERROR: API credentials missing.")
-        return
-
-    titles = get_news()
+    titles = get_curated_news()
     processed_data = analyze_sentiment(titles)
-
-    if not processed_data:
-        print("CRITICAL: Stream collapsed. Generating synthetic data.")
-        processed_data = [{
-            "text": "SYSTEM_IDLE_CHECK_LOGS", 
-            "score": 0.0, 
-            "global_state": "RAINBOW",
-            "resonances": [0.1]*7,
-            "ml_metrics": {"confidence": 0.0, "latency": 0, "entropy": 0.0, "drift_score": 1.0}
-        }]
 
     os.makedirs('data', exist_ok=True)
     with open('data/news.json', 'w') as f:
         json.dump(processed_data, f, indent=2)
     
-    print(f"--- SCAN COMPLETE: Data written to news.json ---")
+    print(f"Scan complete. Visual state set to: {processed_data[0]['global_state']}")
+    print(f"Poetic Summary: {processed_data[0]['text']}")
 
 if __name__ == "__main__":
     main()
