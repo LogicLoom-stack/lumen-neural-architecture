@@ -1,23 +1,23 @@
 [
   {
-    "text": "SYSTEM_NEUTRAL",
+    "text": "SYNTHETIC_SIGNAL_STABLE",
     "score": 0,
     "resonances": [
-      0.2,
-      0.2,
-      0.2,
-      0.2,
-      0.2,
-      0.2,
-      0.2
+      0.3,
+      0.3,
+      0.3,
+      0.3,
+      0.3,
+      0.3,
+      0.3
     ],
     "global_state": "RAINBOW",
     "ml_metrics": {
       "confidence": 0.99,
-      "latency": 12,
-      "entropy": 0.01,
-      "drift_score": 0.0,
-      "tokens": 10
+      "latency": 15,
+      "entropy": 0.05,
+      "drift_score": 0.01,
+      "tokens": 12
     }
   }
 ]
