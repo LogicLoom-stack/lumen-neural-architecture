@@ -59,6 +59,7 @@ def analyze_sentiment(mood, selected_items):
     Return a JSON list with 1 object:
     {{
       "text": "3-5 WORD POETIC SUMMARY",
+      "articles": ["Headline 1", "Headline 2", ...],
       "score": float (-10.0 to 10.0), 
       "global_state": "GOLD" | "RED" | "RAINBOW",
       "resonances": [7 floats 0-1],
@@ -82,6 +83,7 @@ def analyze_sentiment(mood, selected_items):
 def local_manual_synthesis(mood, items):
     """Calculates state by averaging the manual scores in the dataset."""
     avg_score = sum(item["score"] for item in items) / len(items)
+    titles = [item["title"] for item in items]
     
     # Determine state based on average
     if avg_score > 3.0:
@@ -93,6 +95,7 @@ def local_manual_synthesis(mood, items):
     
     return [{
         "text": f"MANUAL {mood.upper()} ALIGNMENT",
+        "articles": titles,
         "score": round(avg_score, 2),
         "global_state": state,
         "resonances": [random.uniform(0.1, 0.9) for _ in range(7)],
