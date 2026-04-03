@@ -7,17 +7,17 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
     body { margin: 0; background: #010103; color: white; font-family: 'Courier New', Courier, monospace; overflow: hidden; }
-    #ui { position: fixed; left: 50px; top: 50%; transform: translateY(-50%); z-index: 100; pointer-events: none; opacity: 0.8; }
+    #ui { position: fixed; left: 50px; top: 50%; transform: translateY(-50%); z-index: 100; pointer-events: auto; opacity: 0.9; }
     #news-text { font-size: 20px; max-width: 400px; font-weight: 300; text-transform: uppercase; margin-bottom: 30px; line-height: 1.4; letter-spacing: 2px; color: #ccffef; }
     
     .label { color: #00ffcc; letter-spacing: 3px; font-size: 10px; margin-bottom: 8px; opacity: 0.6; display: block; }
     .stat { margin-bottom: 25px; border-left: 1px solid rgba(0, 255, 204, 0.5); padding-left: 20px; }
     .val { font-size: 16px; color: #aaa; }
     
-    .ml-panel { margin-top: 40px; border-top: 1px solid rgba(0, 255, 204, 0.2); pt: 20px; }
-    .ml-row { display: flex; justify-content: space-between; width: 220px; margin-bottom: 10px; font-size: 12px; letter-spacing: 1px; }
-    .ml-label { color: #555; }
-    .ml-val { color: #00ffcc; font-weight: bold; }
+    .ml-panel { margin-top: 20px; }
+    .ml-row { display: flex; justify-content: space-between; width: 220px; margin-bottom: 8px; font-size: 12px; letter-spacing: 1px; }
+    .ml-label { color: rgba(0, 255, 204, 0.4); text-transform: uppercase; }
+    .ml-val { color: #00ffcc; font-weight: bold; opacity: 0.9; }
 
     #debug-log { position: fixed; bottom: 30px; left: 50px; font-size: 9px; color: #444; letter-spacing: 2px; }
     canvas { display: block; }
@@ -27,20 +27,19 @@
   <div id="ui">
     <div class="stat">
       <div class="label">NEURAL_STREAM</div>
-      <div id="news-text">SYNCING_INFERENCE...</div>
+      <div id="news-text">INITIALIZING_INFERENCE...</div>
     </div>
     
     <div class="stat">
       <span class="label">SENTIMENT_FLUX</span>
       <span class="val" id="score">+0.00</span>
-    </div>
-
-    <div class="ml-panel">
-      <div class="label">MODEL_TELEMETRY</div>
-      <div class="ml-row"><span class="ml-label">CONFIDENCE</span><span class="ml-val" id="ml-conf">0.0%</span></div>
-      <div class="ml-row"><span class="ml-label">LATENCY</span><span class="ml-val" id="ml-late">0ms</span></div>
-      <div class="ml-row"><span class="ml-label">ENTROPY</span><span class="ml-val" id="ml-entr">0.00</span></div>
-      <div class="ml-row"><span class="ml-label">DRIFT_SCORE</span><span class="ml-val" id="ml-drft">0.00Δ</span></div>
+      
+      <div class="ml-panel">
+        <div class="ml-row" style="margin-top: 15px;"><span class="ml-label">CONFIDENCE</span><span class="ml-val" id="ml-conf">--%</span></div>
+        <div class="ml-row"><span class="ml-label">LATENCY</span><span class="ml-val" id="ml-late">--ms</span></div>
+        <div class="ml-row"><span class="ml-label">ENTROPY</span><span class="ml-val" id="ml-entr">--</span></div>
+        <div class="ml-row"><span class="ml-label">DRIFT</span><span class="ml-val" id="ml-drft">--Δ</span></div>
+      </div>
     </div>
   </div>
   
@@ -73,41 +72,48 @@
       try {
         const response = await fetch(`data/news.json?t=${Date.now()}`);
         if (response.ok) {
-          newsData = await response.json();
-          updateDisplay();
+          const data = await response.json();
+          if (Array.isArray(data) && data.length > 0) {
+            newsData = data;
+            updateDisplay();
+          } else {
+            throw new Error("Empty data");
+          }
+        } else {
+          throw new Error("Fetch failed");
         }
       } catch (e) {
+        console.warn("Using offline fallback data.");
         newsData = [{
-          "text": "OFFLINE_TELEMETRY_FALLBACK", 
-          "score": 1.2, 
+          "text": "NEURAL_SYNAPSE_STANDBY", 
+          "score": 0.5, 
           "global_state": "RAINBOW",
-          "resonances": [0.2, 0.2, 0.2, 0.8, 0.2, 0.2, 0.2],
-          "ml_metrics": {"confidence": 0.94, "latency": 42, "entropy": 0.12, "drift_score": 0.05}
+          "resonances": [0.1, 0.1, 0.3, 0.6, 0.2, 0.1, 0.1],
+          "ml_metrics": {"confidence": 0.88, "latency": 142, "entropy": 0.45, "drift_score": 0.02}
         }];
         updateDisplay();
       }
     }
 
     function updateDisplay() {
-      if (newsData.length === 0) return;
+      if (!newsData || newsData.length === 0) return;
       const item = newsData[currentIndex];
       
       // Update Text UI
-      document.getElementById('news-text').innerText = item.text;
-      document.getElementById('score').innerText = (item.score > 0 ? "+" : "") + item.score;
+      document.getElementById('news-text').innerText = item.text || "PROCESSING...";
+      document.getElementById('score').innerText = (item.score > 0 ? "+" : "") + (item.score || 0).toFixed(2);
       
-      // Update ML Metrics UI
-      if(item.ml_metrics) {
-        document.getElementById('ml-conf').innerText = (item.ml_metrics.confidence * 100).toFixed(1) + "%";
-        document.getElementById('ml-late').innerText = item.ml_metrics.latency + "ms";
-        document.getElementById('ml-entr').innerText = item.ml_metrics.entropy.toFixed(2);
-        document.getElementById('ml-drft').innerText = item.ml_metrics.drift_score.toFixed(2) + "Δ";
-      }
+      // Update ML Metrics UI - Nested within the flux block
+      const metrics = item.ml_metrics || { confidence: 0.9, latency: 50, entropy: 0.1, drift_score: 0.01 };
+      document.getElementById('ml-conf').innerText = (metrics.confidence * 100).toFixed(1) + "%";
+      document.getElementById('ml-late').innerText = metrics.latency + "ms";
+      document.getElementById('ml-entr').innerText = metrics.entropy.toFixed(2);
+      document.getElementById('ml-drft').innerText = (metrics.drift_score || 0).toFixed(2) + "Δ";
 
       setTimeout(() => {
         currentIndex = (currentIndex + 1) % newsData.length;
         updateDisplay();
-      }, 15000);
+      }, 10000); // Shorter rotation for more frequent color changes
     }
 
     function setup() {
@@ -138,9 +144,9 @@
 
     function drawPetals(baseRadius, shapeInfo, intensity, pulse, phase, i, resonance) {
       beginShape();
-      for (let angle = 0; angle < TWO_PI + 0.1; angle += 0.05) {
+      for (let angle = 0; angle < TWO_PI + 0.1; angle += 0.08) {
         let r;
-        let flare = resonance * 20;
+        let flare = resonance * 25;
         if (i === 5) { 
           let maxWingSize = (40 + intensity * 20);
           let wingShape = pow(abs(cos(angle)), 0.6) * maxWingSize;
@@ -159,10 +165,10 @@
       background(1, 1, 4); 
       
       let item = newsData[currentIndex] || {score: 0, global_state: 'RAINBOW', resonances: [0,0,0,0,0,0,0]};
-      let intensity = map(parseFloat(item.score), -15, 15, 0.3, 0.6);
+      let intensity = map(parseFloat(item.score || 0), -10, 10, 0.2, 0.8);
       let gState = item.global_state || 'RAINBOW';
 
-      // Stars
+      // Background Particles
       noStroke();
       for(let p of particles) {
         p.x += p.velX; p.y += p.velY;
@@ -174,7 +180,7 @@
       
       for (let i = 0; i < 7; i++) {
         let m = chakraMovementData[i];
-        let res = item.resonances ? (item.resonances[i] || 0) : 0;
+        let res = (item.resonances && item.resonances[i]) ? item.resonances[i] : 0.1;
         
         push();
         translate(0, anatomicalY[i] + sin(frameCount * 0.005) * 20 + sin(frameCount * 0.012 - m.floatPhase) * 40, 0);
@@ -182,42 +188,42 @@
         let phase = frameCount * 0.005 + (i * 0.8);
         let pulse = sin(phase);
         
-        // GLOBAL COLOR LOGIC
         let r, g, b;
         if (gState === 'GOLD') {
-          r = 255; g = 215; b = 0; // Gold base
+          r = 255; g = 200; b = 50; 
         } else if (gState === 'RED') {
-          r = 255; g = 30; b = 30; // Red base
+          r = 255; g = 40; b = 40;
         } else {
           let bc = baseRainbow[i];
-          r = bc[0]; g = bc[1]; b = bc[2]; // Rainbow base
+          r = bc[0]; g = bc[1]; b = bc[2];
         }
 
-        // Apply Resonance (White Flare)
-        r = lerp(r, 255, res * 0.8);
-        g = lerp(g, 255, res * 0.6);
-        b = lerp(b, 255, res * 0.9);
+        // Color frequency shift - makes it more vibrant based on news intensity
+        r = lerp(r, 255, res * 0.85);
+        g = lerp(g, 255, res * 0.7);
+        b = lerp(b, 255, res * 0.95);
 
         rotateY(frameCount * m.rotSpeed + (i * 0.2));
-        rotateX(0.35); 
+        rotateX(0.35 + (res * 0.1)); 
         noFill();
-        strokeWeight(2.0 + res * 3); 
+        strokeWeight(1.5 + res * 4); 
         
         for (let j = 0; j < 3; j++) {
-          stroke(r, g, b, 255 * map(sin(phase * 1.5 - j), -1, 1, 0.7, 1)); 
+          let alpha = 255 * map(sin(phase * 1.5 - j), -1, 1, 0.6, 1);
+          stroke(r, g, b, alpha); 
           drawPetals(120 + (j * 30), chakraShapes[i], intensity, pulse, phase, i, res);
         }
 
-        // Core
-        fill(r, g, b, 230 + (pulse * 25));
+        // Core Geometry
+        fill(r, g, b, 200 + (pulse * 50));
         noStroke();
-        let sz = 35 + (pulse * 5) + (res * 15); 
+        let sz = 35 + (pulse * 5) + (res * 20); 
         if (i === 0) box(sz); 
         else if (i === 1) { rotateZ(HALF_PI); arc(0, 0, sz * 1.5, sz * 1.5, 0, PI); } 
         else if (i === 2 || i === 5) drawTriangle(sz, true); 
         else if (i === 3) { drawTriangle(sz, true); drawTriangle(sz, false); } 
         else if (i === 4) ellipse(0, 0, sz * 1.2, sz * 1.2); 
-        else if (i === 6) sphere(sz * 0.8, 24, 24); 
+        else if (i === 6) sphere(sz * 0.8, 16, 16); 
         pop();
       }
     }
