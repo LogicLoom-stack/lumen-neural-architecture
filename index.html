@@ -9,9 +9,10 @@
     :root { --accent: #00ffcc; --bg: #020305; }
     body { margin: 0; background: var(--bg); color: white; font-family: monospace; overflow: hidden; }
     #ui { position: fixed; left: 40px; top: 50%; transform: translateY(-50%); z-index: 100; pointer-events: none; }
-    #news-text { font-size: 24px; max-width: 500px; font-weight: bold; text-transform: uppercase; margin-bottom: 20px; }
+    #news-text { font-size: 24px; max-width: 500px; font-weight: bold; text-transform: uppercase; margin-bottom: 20px; transition: all 0.5s ease; }
     .label { color: var(--accent); letter-spacing: 3px; font-size: 10px; margin-bottom: 5px; opacity: 0.7; }
     .stat { margin-bottom: 15px; }
+    #debug-log { position: fixed; bottom: 10px; left: 10px; font-size: 8px; color: #555; pointer-events: none; }
     canvas { display: block; }
   </style>
 </head>
@@ -27,38 +28,61 @@
       <div id="score">0.00</div>
     </div>
   </div>
+  <div id="debug-log">LOG: Waiting for setup...</div>
 
   <script>
     let newsData = [];
     let currentIndex = 0;
     let angle = 0;
+    let particles = [];
 
-    // This function handles the "Empty Website" issue
+    function log(msg) {
+      console.log(msg);
+      document.getElementById('debug-log').innerText = "LOG: " + msg;
+    }
+
     async function loadNews() {
       const statusEl = document.getElementById('status');
-      // Fix 1: Try multiple paths (root vs relative)
+      
+      // Determine base URL to handle GitHub Pages subfolders
+      const repoName = window.location.pathname.split('/')[1];
+      const isSubfolder = window.location.hostname.includes('github.io') && repoName && repoName !== "";
+      
       const possiblePaths = [
         'data/news.json',
         './data/news.json',
-        window.location.pathname.replace('index.html', '') + 'data/news.json'
+        `/${repoName}/data/news.json`,
+        window.location.origin + window.location.pathname.replace(/index\.html$/, '') + 'data/news.json'
       ];
+
+      log("Scanning data paths...");
 
       for (let path of possiblePaths) {
         try {
-          // Fix 2: Add timestamp to bypass GitHub's 10-minute cache
-          const response = await fetch(`${path}?t=${Date.now()}`);
+          const response = await fetch(`${path}?cache_bust=${Date.now()}`);
           if (response.ok) {
             const data = await response.json();
-            if (data && data.length > 0) {
+            if (Array.isArray(data) && data.length > 0) {
               newsData = data;
               statusEl.innerText = "SIGNAL_STABLE";
+              log("Data synced from: " + path);
               updateDisplay();
               return;
             }
           }
-        } catch (e) { console.log("Path fail:", path); }
+        } catch (e) { 
+          log("Attempt failed for: " + path); 
+        }
       }
-      statusEl.innerText = "DATA_PATH_ERROR";
+
+      // If all else fails, use a local fallback so the user sees SOMETHING
+      statusEl.innerText = "USING_LOCAL_CACHE";
+      newsData = [{
+        "text": "COULD NOT LOAD DATA/NEWS.JSON - CHECK GITHUB REPO FOLDER STRUCTURE",
+        "score": -1.0,
+        "color_hex": "#ff3300"
+      }];
+      updateDisplay();
     }
 
     function updateDisplay() {
@@ -68,7 +92,6 @@
       document.getElementById('score').innerText = item.score;
       if (item.color_hex) document.documentElement.style.setProperty('--accent', item.color_hex);
       
-      // Cycle news every 8 seconds
       setTimeout(() => {
         currentIndex = (currentIndex + 1) % newsData.length;
         updateDisplay();
@@ -77,30 +100,58 @@
 
     function setup() {
       createCanvas(windowWidth, windowHeight, WEBGL);
+      // Initialize some background particles for visual interest even when loading
+      for(let i=0; i<50; i++) {
+        particles.push({
+          pos: createVector(random(-500, 500), random(-500, 500), random(-500, 500)),
+          vel: createVector(random(-1,1), random(-1,1), random(-1,1))
+        });
+      }
       loadNews();
     }
 
     function draw() {
       background(2, 3, 5);
-      rotateX(angle);
-      rotateY(angle * 0.3);
       
       let accent = getComputedStyle(document.documentElement).getPropertyValue('--accent');
+      
+      // Draw background particles
       stroke(accent);
+      strokeWeight(2);
+      beginShape(POINTS);
+      particles.forEach(p => {
+        vertex(p.pos.x, p.pos.y, p.pos.z);
+        p.pos.add(p.vel);
+        if(p.pos.mag() > 800) p.pos.setMag(10);
+      });
+      endShape();
+
+      // Core Architecture Visual
+      rotateX(angle);
+      rotateY(angle * 0.3);
       noFill();
       strokeWeight(1);
       
-      // Simple neural geometry
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < 6; i++) {
         push();
-        rotateZ(frameCount * 0.01 + i);
-        torus(100 + i * 20, 1);
+        rotateZ(frameCount * 0.005 + i);
+        // Varying shapes based on sentiment score (if available)
+        let score = newsData[currentIndex]?.score || 0;
+        let size = 150 + i * 25 + (score * 2);
+        
+        if (i % 2 === 0) {
+          torus(size, 0.5);
+        } else {
+          box(size * 1.2, size * 1.2, 2);
+        }
         pop();
       }
-      angle += 0.01;
+      angle += 0.005;
     }
 
-    function windowResized() { resizeCanvas(windowWidth, windowHeight); }
+    function windowResized() {
+      resizeCanvas(windowWidth, windowHeight);
+    }
   </script>
 </body>
 </html>
