@@ -9,10 +9,11 @@
     :root { --accent: #00ffcc; --bg: #020305; }
     body { margin: 0; background: var(--bg); color: white; font-family: monospace; overflow: hidden; }
     #ui { position: fixed; left: 40px; top: 50%; transform: translateY(-50%); z-index: 100; pointer-events: none; }
-    #news-text { font-size: 24px; max-width: 500px; font-weight: bold; text-transform: uppercase; margin-bottom: 20px; transition: all 0.5s ease; }
-    .label { color: var(--accent); letter-spacing: 3px; font-size: 10px; margin-bottom: 5px; opacity: 0.7; }
-    .stat { margin-bottom: 15px; }
-    #debug-log { position: fixed; bottom: 10px; left: 10px; font-size: 8px; color: #555; pointer-events: none; }
+    #news-text { font-size: 22px; max-width: 450px; font-weight: bold; text-transform: uppercase; margin-bottom: 20px; transition: all 0.8s ease; letter-spacing: 1px; line-height: 1.3; }
+    .label { color: var(--accent); letter-spacing: 3px; font-size: 10px; margin-bottom: 5px; opacity: 0.6; }
+    .stat { margin-bottom: 20px; }
+    #score { font-size: 18px; font-weight: bold; }
+    #debug-log { position: fixed; bottom: 10px; left: 10px; font-size: 8px; color: #333; pointer-events: none; }
     canvas { display: block; }
   </style>
 </head>
@@ -28,13 +29,14 @@
       <div id="score">0.00</div>
     </div>
   </div>
-  <div id="debug-log">LOG: Waiting for setup...</div>
+  <div id="debug-log">LOG: System start...</div>
 
   <script>
     let newsData = [];
     let currentIndex = 0;
     let angle = 0;
     let particles = [];
+    let pulse = 0;
 
     function log(msg) {
       console.log(msg);
@@ -43,46 +45,23 @@
 
     async function loadNews() {
       const statusEl = document.getElementById('status');
-      
-      // Determine base URL to handle GitHub Pages subfolders
       const repoName = window.location.pathname.split('/')[1];
-      const isSubfolder = window.location.hostname.includes('github.io') && repoName && repoName !== "";
-      
-      const possiblePaths = [
-        'data/news.json',
-        './data/news.json',
-        `/${repoName}/data/news.json`,
-        window.location.origin + window.location.pathname.replace(/index\.html$/, '') + 'data/news.json'
-      ];
+      const path = window.location.hostname.includes('github.io') ? `/${repoName}/data/news.json` : 'data/news.json';
 
-      log("Scanning data paths...");
-
-      for (let path of possiblePaths) {
-        try {
-          const response = await fetch(`${path}?cache_bust=${Date.now()}`);
-          if (response.ok) {
-            const data = await response.json();
-            if (Array.isArray(data) && data.length > 0) {
-              newsData = data;
-              statusEl.innerText = "SIGNAL_STABLE";
-              log("Data synced from: " + path);
-              updateDisplay();
-              return;
-            }
-          }
-        } catch (e) { 
-          log("Attempt failed for: " + path); 
-        }
+      try {
+        const response = await fetch(`${path}?t=${Date.now()}`);
+        if (response.ok) {
+          newsData = await response.json();
+          statusEl.innerText = "SIGNAL_STABLE";
+          log("Data synced.");
+          updateDisplay();
+        } else { throw new Error(); }
+      } catch (e) {
+        log("External feed failed. Using simulated backup.");
+        statusEl.innerText = "SIMULATED_FEED";
+        newsData = [{"text": "NEURAL CORE STABILIZED", "score": 5.0, "color_hex": "#00ffcc"}];
+        updateDisplay();
       }
-
-      // If all else fails, use a local fallback so the user sees SOMETHING
-      statusEl.innerText = "USING_LOCAL_CACHE";
-      newsData = [{
-        "text": "COULD NOT LOAD DATA/NEWS.JSON - CHECK GITHUB REPO FOLDER STRUCTURE",
-        "score": -1.0,
-        "color_hex": "#ff3300"
-      }];
-      updateDisplay();
     }
 
     function updateDisplay() {
@@ -95,16 +74,15 @@
       setTimeout(() => {
         currentIndex = (currentIndex + 1) % newsData.length;
         updateDisplay();
-      }, 8000);
+      }, 10000);
     }
 
     function setup() {
       createCanvas(windowWidth, windowHeight, WEBGL);
-      // Initialize some background particles for visual interest even when loading
-      for(let i=0; i<50; i++) {
+      for(let i=0; i<80; i++) {
         particles.push({
-          pos: createVector(random(-500, 500), random(-500, 500), random(-500, 500)),
-          vel: createVector(random(-1,1), random(-1,1), random(-1,1))
+          pos: createVector(random(-800, 800), random(-800, 800), random(-800, 800)),
+          speed: random(0.001, 0.005)
         });
       }
       loadNews();
@@ -112,46 +90,64 @@
 
     function draw() {
       background(2, 3, 5);
+      orbitControl(1, 1, 0.1); // Allow user to rotate with mouse
       
-      let accent = getComputedStyle(document.documentElement).getPropertyValue('--accent');
+      let accent = color(getComputedStyle(document.documentElement).getPropertyValue('--accent'));
+      let score = parseFloat(newsData[currentIndex]?.score || 0);
       
-      // Draw background particles
+      // Floating Starfield
       stroke(accent);
-      strokeWeight(2);
+      strokeWeight(1.5);
       beginShape(POINTS);
       particles.forEach(p => {
-        vertex(p.pos.x, p.pos.y, p.pos.z);
-        p.pos.add(p.vel);
-        if(p.pos.mag() > 800) p.pos.setMag(10);
+        let x = p.pos.x * sin(frameCount * p.speed);
+        let y = p.pos.y * cos(frameCount * p.speed);
+        vertex(x, y, p.pos.z);
       });
       endShape();
 
-      // Core Architecture Visual
-      rotateX(angle);
-      rotateY(angle * 0.3);
-      noFill();
-      strokeWeight(1);
+      // The "Chakra" Stack
+      rotateY(angle * 0.5);
+      rotateX(PI/4); // Slight tilt for depth
       
-      for (let i = 0; i < 6; i++) {
+      noFill();
+      strokeWeight(1.5);
+      
+      pulse = sin(frameCount * 0.02) * 10;
+
+      for (let i = 0; i < 7; i++) {
         push();
-        rotateZ(frameCount * 0.005 + i);
-        // Varying shapes based on sentiment score (if available)
-        let score = newsData[currentIndex]?.score || 0;
-        let size = 150 + i * 25 + (score * 2);
+        let layerZ = (i - 3) * 40; // Stacked layers
+        translate(0, 0, layerZ);
+        rotateZ(frameCount * (0.01 + i * 0.002));
         
+        let size = 120 + (i * 25) + pulse + (score * 2);
+        let alpha = map(i, 0, 7, 255, 50);
+        accent.setAlpha(alpha);
+        stroke(accent);
+
         if (i % 2 === 0) {
-          torus(size, 0.5);
+          // Geometric Mandala
+          beginShape();
+          let steps = 6 + i; 
+          for(let a = 0; a < TWO_PI; a += TWO_PI/steps) {
+            let x = cos(a) * size;
+            let y = sin(a) * size;
+            vertex(x, y, 0);
+          }
+          endShape(CLOSE);
         } else {
-          box(size * 1.2, size * 1.2, 2);
+          // Circular rings
+          ellipse(0, 0, size * 1.1);
+          // Inner detail
+          ellipse(0, 0, size * 0.5);
         }
         pop();
       }
-      angle += 0.005;
+      angle += 0.01;
     }
 
-    function windowResized() {
-      resizeCanvas(windowWidth, windowHeight);
-    }
+    function windowResized() { resizeCanvas(windowWidth, windowHeight); }
   </script>
 </body>
 </html>
