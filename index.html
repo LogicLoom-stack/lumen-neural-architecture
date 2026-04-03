@@ -3,85 +3,104 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lumen: Neural Architecture V5</title>
+  <title>Lumen: Neural Architecture</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
-    :root {
-      --current-accent: #00ffcc;
-      --bg-deep: #020305;
-    }
-    body { margin: 0; padding: 0; overflow: hidden; background-color: var(--bg-deep); font-family: 'Courier New', monospace; }
+    :root { --accent: #00ffcc; --bg: #020305; }
+    body { margin: 0; background: var(--bg); color: white; font-family: monospace; overflow: hidden; }
+    #ui { position: fixed; left: 40px; top: 50%; transform: translateY(-50%); z-index: 100; pointer-events: none; }
+    #news-text { font-size: 24px; max-width: 500px; font-weight: bold; text-transform: uppercase; margin-bottom: 20px; }
+    .label { color: var(--accent); letter-spacing: 3px; font-size: 10px; margin-bottom: 5px; opacity: 0.7; }
+    .stat { margin-bottom: 15px; }
     canvas { display: block; }
-    
-    #logic-terminal {
-      position: fixed;
-      left: 50px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 480px;
-      z-index: 100;
-      pointer-events: none;
-      border-left: 1px solid var(--current-accent);
-      padding: 30px 0 30px 40px;
-      background: linear-gradient(90deg, rgba(var(--accent-rgb), 0.1) 0%, transparent 100%);
-      transition: border-color 1s ease;
-    }
-
-    .label-tech { 
-      font-size: 10px; 
-      color: var(--current-accent); 
-      text-transform: uppercase; 
-      letter-spacing: 5px; 
-      margin-bottom: 15px; 
-      opacity: 0.6; 
-    }
-    
-    #news-display { 
-      font-size: 26px; 
-      line-height: 1.1; 
-      color: #ffffff; 
-      font-weight: 900; 
-      text-transform: uppercase; 
-      min-height: 100px;
-      letter-spacing: 1px;
-      text-shadow: 0 0 10px rgba(255,255,255,0.2);
-    }
-
-    .metric-group { margin-top: 30px; border-top: 1px solid rgba(255,255,255,0.1); pt: 20px; }
-    .data-row { display: flex; align-items: center; gap: 20px; margin-bottom: 10px; }
-    .value-num { font-size: 14px; color: #ffffff; font-weight: bold; font-family: 'Courier New', monospace; }
-    
-    .category-badge {
-      display: inline-block;
-      padding: 4px 12px;
-      background: var(--current-accent);
-      color: #000;
-      font-size: 10px;
-      font-weight: bold;
-      margin-bottom: 20px;
-      letter-spacing: 2px;
-    }
-
-    /* CRT/Scanline Overlays */
-    .overlay-vignette {
-      position: fixed;
-      inset: 0;
-      background: radial-gradient(circle, transparent 40%, rgba(0,0,0,0.6) 100%);
-      z-index: 150;
-      pointer-events: none;
-    }
-    .scanlines {
-      position: fixed;
-      inset: 0;
-      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
-      background-size: 100% 3px, 3px 100%;
-      z-index: 200;
-      pointer-events: none;
-    }
   </style>
 </head>
 <body>
-  <div class="overlay-vignette"></div>
-  <div class="scanlines"></div>
-  
-  <div id="logic
+  <div id="ui">
+    <div class="stat">
+      <div class="label">NEURAL_FEED_STATUS</div>
+      <div id="status">INIT_SEQUENCING...</div>
+    </div>
+    <div id="news-text">CONNECTING_TO_STREAM...</div>
+    <div class="stat">
+      <div class="label">SENTIMENT_ANALYSIS</div>
+      <div id="score">0.00</div>
+    </div>
+  </div>
+
+  <script>
+    let newsData = [];
+    let currentIndex = 0;
+    let angle = 0;
+
+    // This function handles the "Empty Website" issue
+    async function loadNews() {
+      const statusEl = document.getElementById('status');
+      // Fix 1: Try multiple paths (root vs relative)
+      const possiblePaths = [
+        'data/news.json',
+        './data/news.json',
+        window.location.pathname.replace('index.html', '') + 'data/news.json'
+      ];
+
+      for (let path of possiblePaths) {
+        try {
+          // Fix 2: Add timestamp to bypass GitHub's 10-minute cache
+          const response = await fetch(`${path}?t=${Date.now()}`);
+          if (response.ok) {
+            const data = await response.json();
+            if (data && data.length > 0) {
+              newsData = data;
+              statusEl.innerText = "SIGNAL_STABLE";
+              updateDisplay();
+              return;
+            }
+          }
+        } catch (e) { console.log("Path fail:", path); }
+      }
+      statusEl.innerText = "DATA_PATH_ERROR";
+    }
+
+    function updateDisplay() {
+      if (newsData.length === 0) return;
+      const item = newsData[currentIndex];
+      document.getElementById('news-text').innerText = item.text;
+      document.getElementById('score').innerText = item.score;
+      if (item.color_hex) document.documentElement.style.setProperty('--accent', item.color_hex);
+      
+      // Cycle news every 8 seconds
+      setTimeout(() => {
+        currentIndex = (currentIndex + 1) % newsData.length;
+        updateDisplay();
+      }, 8000);
+    }
+
+    function setup() {
+      createCanvas(windowWidth, windowHeight, WEBGL);
+      loadNews();
+    }
+
+    function draw() {
+      background(2, 3, 5);
+      rotateX(angle);
+      rotateY(angle * 0.3);
+      
+      let accent = getComputedStyle(document.documentElement).getPropertyValue('--accent');
+      stroke(accent);
+      noFill();
+      strokeWeight(1);
+      
+      // Simple neural geometry
+      for (let i = 0; i < 5; i++) {
+        push();
+        rotateZ(frameCount * 0.01 + i);
+        torus(100 + i * 20, 1);
+        pop();
+      }
+      angle += 0.01;
+    }
+
+    function windowResized() { resizeCanvas(windowWidth, windowHeight); }
+  </script>
+</body>
+</html>
