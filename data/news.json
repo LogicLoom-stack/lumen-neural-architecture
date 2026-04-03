@@ -1,28 +1,11 @@
-[
-  {
-    "text": "MANUAL NEGATIVE ALIGNMENT",
-    "articles": [
-      "Ultra-processed food links to surge in cardiovascular cases among youth.",
-      "Major 1.5\u00b0C climate overshoot predicted for the 2025-2029 window.",
-      "WMO warns planet's climate is more out of balance than ever.",
-      "Geoeconomic confrontation cited as top risk for 2026 stability."
-    ],
-    "score": -7.75,
-    "global_state": "RED",
-    "resonances": [
-      0.8831257510443711,
-      0.7267927342102647,
-      0.2434191617551183,
-      0.21795363332859452,
-      0.6181482394061677,
-      0.8113390128730452,
-      0.429394367633644
-    ],
-    "ml_metrics": {
-      "confidence": 1.0,
-      "latency": 0,
-      "entropy": 0.0,
-      "drift_score": 0.0
-    }
+{
+  "articles": [],
+  "global_summary": "FALLBACK ACTIVE",
+  "error": "Inference failed",
+  "ml_metrics": {
+    "confidence": 0.99,
+    "latency": 5,
+    "entropy": 0.05,
+    "drift_score": 0.0
   }
-]
+}
