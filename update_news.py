@@ -1,7 +1,9 @@
 import os
 import json
 import requests
+import time
 from google import genai
+from google.genai import types
 
 # Configuration
 NEWS_API_KEY = os.getenv("NEWS_API_KEY")
@@ -9,83 +11,93 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 OUTPUT_PATH = "data/news.json"
 
 def fetch_filtered_news():
-    """Guaranteed news fetcher with wide parameters to ensure news.json is never empty."""
+    """Fetches a very small, highly-curated list of headlines to save API quota."""
+    # Restricted query for quality over quantity
+    topics = "technology OR space OR innovation"
+    exclude = "NOT (crime OR scam OR murder OR fraud)"
     
-    # Attempt 1: Targeted Search
-    topics = "technology OR science OR markets OR space OR climate"
-    exclude = "NOT (crime OR scam OR murder)"
-    url = f"https://newsapi.org/v2/everything?q=({topics}) {exclude}&language=en&sortBy=publishedAt&pageSize=20&apiKey={NEWS_API_KEY}"
+    # Strictly 5 articles to keep token counts very low
+    url = f"https://newsapi.org/v2/everything?q=({topics}) {exclude}&language=en&sortBy=relevancy&pageSize=5&apiKey={NEWS_API_KEY}"
     
     try:
-        print("Fetching global news feed...")
+        print("Accessing Curated News Stream (Limited Volume)...")
         response = requests.get(url, timeout=15)
         response.raise_for_status()
         articles = response.json().get("articles", [])
         
-        # Attempt 2: Fallback to Top Tech Headlines if Attempt 1 is empty
+        # Fallback to a single top headline if the main search is empty
         if not articles:
-            print("Targeted search returned nothing. Trying top-headlines fallback...")
-            fallback_url = f"https://newsapi.org/v2/top-headlines?category=technology&language=en&apiKey={NEWS_API_KEY}"
+            print("No targeted news found. Falling back to single top tech headline...")
+            fallback_url = f"https://newsapi.org/v2/top-headlines?category=technology&language=en&pageSize=1&apiKey={NEWS_API_KEY}"
             response = requests.get(fallback_url, timeout=15)
             articles = response.json().get("articles", [])
 
-        titles = [a["title"] for a in articles[:12] if a.get("title") and len(a["title"]) > 10]
-        return titles
-        
+        return [a["title"] for a in articles[:5] if a.get("title") and len(a["title"]) > 10]
     except Exception as e:
-        print(f"Error fetching news: {e}")
+        print(f"News API Error: {e}")
         return []
 
 def analyze_sentiment(headlines):
-    """Uses Gemini to assign scores and visual metadata."""
+    """Analyzes a small batch of headlines in one single request with high retry stability."""
     if not headlines:
         return []
         
     client = genai.Client(api_key=GEMINI_API_KEY)
     
+    # Ultra-compact prompt for free tier reliability
     prompt = f"""
-    Analyze these headlines for a generative art installation. 
-    For each, return a JSON object with:
-    1. "text": The headline string.
-    2. "score": Float from -15.0 to 15.0.
-    3. "category": One of [MARKETS, CLIMATE, WAR, TECH, SPACE, ART, GENERAL].
-    4. "color_hex": A high-tech neon hex code (e.g., #00ffff).
-    5. "geometry": "SHARP" or "FLUID".
+    Analyze these 5 headlines for an art project. 
+    Return a JSON array of objects:
+    [{{"text": "headline", "score": -15 to 15, "category": "TECH", "color_hex": "#00ffff", "geometry": "FLUID"}}]
     
     Headlines: {headlines}
-    
-    Return ONLY a valid JSON array. No markdown formatting.
     """
     
-    try:
-        # Changed model to a more standard identifier to fix the 404 error
-        response = client.models.generate_content(
-            model="gemini-2.0-flash",
-            contents=prompt,
-            config={"response_mime_type": "application/json"}
-        )
-        return json.loads(response.text)
-    except Exception as e:
-        print(f"Gemini Analysis Error: {e}")
-        return []
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            # gemini-2.0-flash-lite is the best for high-frequency free tier usage
+            response = client.models.generate_content(
+                model="gemini-2.0-flash-lite",
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    temperature=0.2 
+                )
+            )
+            return json.loads(response.text)
+            
+        except Exception as e:
+            if "429" in str(e):
+                wait_time = 15 # Longer wait for free tier cooling
+                print(f"Rate limit hit. Waiting {wait_time}s before retry...")
+                time.sleep(wait_time)
+            else:
+                print(f"Gemini Error: {e}")
+                break
+                
+    return []
 
 def main():
-    print("Running Guaranteed News Update...")
+    print("--- STARTING MINIMALIST NEURAL UPDATE ---")
     
     headlines = fetch_filtered_news()
     if not headlines:
-        print("FAILED: No headlines found even in fallback mode.")
+        print("FAILED: No headlines retrieved.")
         data = []
     else:
-        print(f"Found {len(headlines)} headlines. Sending to Gemini...")
+        print(f"Processing {len(headlines)} headlines (Low Volume Mode)...")
         data = analyze_sentiment(headlines)
     
-    # Ensure the data directory exists
+    # Create directory if it doesn't exist
     os.makedirs(os.path.dirname(OUTPUT_PATH), exist_ok=True)
     with open(OUTPUT_PATH, "w") as f:
         json.dump(data, f, indent=2)
     
-    print(f"Success! {len(data)} items written to {OUTPUT_PATH}")
+    if data:
+        print(f"SUCCESS: {len(data)} items saved to {OUTPUT_PATH}")
+    else:
+        print("ERROR: Data was not processed. Check API logs.")
 
 if __name__ == "__main__":
     main()
