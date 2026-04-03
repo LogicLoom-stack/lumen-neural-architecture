@@ -1,22 +1,22 @@
 [
   {
-    "text": "DATA_STREAM_INTERRUPTED",
+    "text": "SYSTEM_IDLE_CHECK_LOGS",
     "score": 0.0,
     "global_state": "RAINBOW",
     "resonances": [
-      0.2,
-      0.2,
-      0.2,
-      0.2,
-      0.2,
-      0.2,
-      0.2
+      0.1,
+      0.1,
+      0.1,
+      0.1,
+      0.1,
+      0.1,
+      0.1
     ],
     "ml_metrics": {
-      "confidence": 0.5,
-      "latency": 5,
-      "entropy": 1.5,
-      "drift_score": 0.9
+      "confidence": 0.0,
+      "latency": 0,
+      "entropy": 0.0,
+      "drift_score": 1.0
     }
   }
 ]
