@@ -1,21 +1,21 @@
 [
   {
-    "text": "LOCAL DATA OVERRIDE",
-    "score": 0.0,
-    "global_state": "RAINBOW",
+    "text": "LOCAL_POSITIVE_SYNTHESIS",
+    "score": 7.5,
+    "global_state": "GOLD",
     "resonances": [
-      0.5,
-      0.5,
-      0.5,
-      0.5,
-      0.5,
-      0.5,
-      0.5
+      0.8189638727482061,
+      0.7559001078206561,
+      0.6956208055757422,
+      0.6483601424666423,
+      0.5914634294085965,
+      0.13435704837449497,
+      0.14164670073906926
     ],
     "ml_metrics": {
       "confidence": 1.0,
       "latency": 0,
-      "entropy": 0.5,
+      "entropy": 0.1,
       "drift_score": 0.0
     }
   }
