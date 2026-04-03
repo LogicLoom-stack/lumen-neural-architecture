@@ -6,66 +6,61 @@
   <title>Lumen: Neural Architecture</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
-    :root { --accent: #00ffcc; --bg: #020305; }
-    body { margin: 0; background: var(--bg); color: white; font-family: monospace; overflow: hidden; }
-    #ui { position: fixed; left: 40px; top: 50%; transform: translateY(-50%); z-index: 100; pointer-events: none; }
-    #news-text { font-size: 20px; max-width: 400px; font-weight: bold; text-transform: uppercase; margin-bottom: 20px; transition: all 0.8s ease; letter-spacing: 1px; line-height: 1.3; }
-    .label { color: var(--accent); letter-spacing: 3px; font-size: 10px; margin-bottom: 5px; opacity: 0.6; }
-    .stat { margin-bottom: 20px; }
-    #score { font-size: 18px; font-weight: bold; }
-    #debug-log { position: fixed; bottom: 10px; left: 10px; font-size: 8px; color: #444; pointer-events: none; }
+    body { margin: 0; background: #010103; color: white; font-family: 'Courier New', Courier, monospace; overflow: hidden; }
+    #ui { position: fixed; left: 50px; top: 50%; transform: translateY(-50%); z-index: 100; pointer-events: none; opacity: 0.8; }
+    #news-text { font-size: 20px; max-width: 400px; font-weight: 300; text-transform: uppercase; margin-bottom: 30px; line-height: 1.4; letter-spacing: 2px; color: #ccffef; }
+    .label { color: #00ffcc; letter-spacing: 3px; font-size: 10px; margin-bottom: 8px; opacity: 0.6; display: block; }
+    .stat { margin-bottom: 30px; border-left: 1px solid rgba(0, 255, 204, 0.5); padding-left: 20px; }
+    .val { font-size: 16px; color: #aaa; }
+    #debug-log { position: fixed; bottom: 30px; left: 50px; font-size: 9px; color: #444; letter-spacing: 2px; }
     canvas { display: block; }
   </style>
 </head>
 <body>
   <div id="ui">
     <div class="stat">
-      <div class="label">NEURAL_FEED_STATUS</div>
-      <div id="status">INIT_SEQUENCING...</div>
+      <div class="label">NEURAL_STREAM</div>
+      <div id="news-text">HARMONIC_COUPLING...</div>
     </div>
-    <div id="news-text">CONNECTING_TO_STREAM...</div>
     <div class="stat">
-      <div class="label">SENTIMENT_ANALYSIS</div>
-      <div id="score">0.00</div>
+      <span class="label">SENTIMENT_FLUX</span>
+      <span class="val" id="score">+0.00</span>
     </div>
   </div>
-  <div id="debug-log">LOG: System start...</div>
+  <div id="debug-log">ZEN_OS // MODE: ENERGY_CONDUCTIVITY // SCALE_LOCKED: TRUE</div>
 
   <script>
     let newsData = [];
     let currentIndex = 0;
     let particles = [];
+    let chakraMovementData = [];
     
-    // EXACT LEGACY DESIGN TOKENS
-    const petalCounts = [4, 6, 10, 12, 16, 2, 80]; 
-    const anatomicalY = [380, 260, 120, 0, -140, -260, -360];
-    const colors = [
-      [255, 50, 50], [255, 105, 180], [255, 215, 0], 
-      [0, 255, 120], [0, 180, 255], [176, 191, 26], [200, 80, 255]
+    const chakraShapes = [
+      { petals: 4,  sides: 4 },  
+      { petals: 6,  sides: 0 },  
+      { petals: 10, sides: 3 },  
+      { petals: 12, sides: 6 },  
+      { petals: 16, sides: 0 },  
+      { petals: 2,  sides: 0 }, // Ajna
+      { petals: 24, sides: 0 }  // Sahasrara
     ];
 
-    function log(msg) {
-      console.log(msg);
-      document.getElementById('debug-log').innerText = "LOG: " + msg;
-    }
+    const anatomicalY = [1050, 700, 350, 0, -350, -700, -1050];
+    
+    const colors = [
+      [255, 50, 50], [255, 160, 40], [255, 255, 100], 
+      [100, 255, 180], [60, 220, 255], [200, 140, 255], [255, 200, 255]
+    ];
 
     async function loadNews() {
-      const statusEl = document.getElementById('status');
-      const repoName = window.location.pathname.split('/')[1];
-      const path = window.location.hostname.includes('github.io') ? `/${repoName}/data/news.json` : 'data/news.json';
-
       try {
-        const response = await fetch(`${path}?t=${Date.now()}`);
+        const response = await fetch(`data/news.json?t=${Date.now()}`);
         if (response.ok) {
           newsData = await response.json();
-          statusEl.innerText = "SIGNAL_STABLE";
-          log("Data synced.");
           updateDisplay();
-        } else { throw new Error(); }
+        }
       } catch (e) {
-        log("External feed failed. Using simulated backup.");
-        statusEl.innerText = "SIMULATED_FEED";
-        newsData = [{"text": "NEURAL CORE STABILIZED", "score": 5.0, "color_hex": "#00ffcc"}];
+        newsData = [{"text": "GEOMETRIC SCALE NORMALIZED", "score": 1.08}];
         updateDisplay();
       }
     }
@@ -74,128 +69,135 @@
       if (newsData.length === 0) return;
       const item = newsData[currentIndex];
       document.getElementById('news-text').innerText = item.text;
-      document.getElementById('score').innerText = item.score;
-      if (item.color_hex) document.documentElement.style.setProperty('--accent', item.color_hex);
-      
+      document.getElementById('score').innerText = (item.score > 0 ? "+" : "") + item.score;
       setTimeout(() => {
         currentIndex = (currentIndex + 1) % newsData.length;
         updateDisplay();
-      }, 10000);
+      }, 15000);
     }
 
     function setup() {
       createCanvas(windowWidth, windowHeight, WEBGL);
       setAttributes('antialias', true);
-      for(let i=0; i<120; i++) {
+      
+      for (let i = 0; i < 7; i++) {
+        chakraMovementData.push({
+          rotSpeed: random(0.001, 0.002), 
+          floatPhase: i * 0.4, 
+          tiltPhase: random(1000)
+        });
+      }
+
+      for(let i=0; i<600; i++) {
         particles.push({
-          pos: createVector(random(-1200, 1200), random(-1200, 1200), random(-1200, 1200)),
-          speed: random(0.0005, 0.001)
+          x: random(-4000, 4000), y: random(-4000, 4000), z: random(-2500, 500),
+          size: random(1.5, 4), alpha: random(100, 200), velX: random(-0.5, 0.5), velY: random(-0.3, 0.3)
         });
       }
       loadNews();
     }
 
-    function draw() {
-      let score = parseFloat(newsData[currentIndex]?.score || 0);
-      let intensity = map(score, -15, 15, 0.2, 1.3);
-      
-      // Legacy background depth
-      let bgR = lerp(10, 50, intensity * 0.5);
-      background(bgR, 12, 20); 
-      
-      orbitControl(2, 2, 0.1);
-      
-      // Floating Dust/Starfield
-      stroke(255, 80);
-      strokeWeight(1);
-      beginShape(POINTS);
-      particles.forEach(p => {
-        vertex(p.pos.x, p.pos.y, p.pos.z);
-        p.pos.y += 0.2; // Slow downward drift
-        if(p.pos.y > 600) p.pos.y = -600;
-      });
-      endShape();
-
-      // LEGACY CHAKRA ARCHITECTURE
-      translate(0, 0, -400); // Push back slightly more for better viewing
-
-      for (let i = 0; i < 7; i++) {
-        push();
-        translate(0, anatomicalY[i], 0);
-
-        let phase = frameCount * 0.015 + (i * 0.8);
-        let pulse = sin(phase);
-        let petals = petalCounts[i];
-        let c = colors[i];
-
-        // Smooth rotation
-        rotateY(frameCount * 0.004 + (i * 0.12));
-        rotateX(sin(phase * 0.2) * 0.15);
-
-        // Drawing the 3 Petal Rings (The "Dreamy Curtain" logic)
-        noFill();
-        for (let j = 0; j < 3; j++) {
-          push();
-          let baseRadius = 60 + (j * 18);
-          stroke(c[0], c[1], c[2], 190 - (j * 45));
-          strokeWeight(1.5 + (intensity * 2.8));
-
-          beginShape();
-          for (let angle = 0; angle < TWO_PI; angle += 0.04) {
-            // The "Dreamy" Math
-            // 1. Basic Petal Shape
-            let petalShape = sin(angle * petals) * (8 + intensity * 30);
-            
-            // 2. The Noise Wobble (Curtain ripple)
-            let noiseX = cos(angle) + i;
-            let noiseY = sin(angle) + j;
-            let noiseTime = frameCount * 0.006;
-            let noiseOff = noise(noiseX, noiseY, noiseTime);
-            let wobble = map(noiseOff, 0, 1, -8, 8) * (1 + intensity * 8);
-            
-            // 3. Fluid Radius
-            let r = baseRadius + petalShape + (pulse * 6) + wobble;
-            
-            let x = r * cos(angle);
-            let y = r * sin(angle);
-            
-            // 4. The Depth Wave (Crucial for the "Curtain" look)
-            // Displacement along Z creates the fabric-like folding effect
-            let z = cos(phase * 1.2 + angle * 2) * (10 + intensity * 35);
-            
-            vertex(x, y, z);
-          }
-          endShape(CLOSE);
-          pop();
-        }
-
-        // Inner Sacred Geometry Core
-        push();
-        fill(c[0], c[1], c[2], 100 + (intensity * 50));
-        noStroke();
-        rotateZ(frameCount * 0.015);
-        let sz = 26 + (pulse * 5);
-
-        if (i === 0) box(sz);
-        else if (i === 1) { rotateZ(HALF_PI); arc(0, 0, sz * 1.8, sz * 1.8, 0, PI); }
-        else if (i === 2) drawYantraTriangle(sz, true);
-        else if (i === 3) { drawYantraTriangle(sz, true); drawYantraTriangle(sz, false); }
-        else if (i === 4) { ellipse(0, 0, sz * 1.4, sz * 1.4); fill(255, 130); drawYantraTriangle(sz * 0.7, true); }
-        else if (i === 5) drawYantraTriangle(sz, true);
-        else if (i === 6) sphere(sz * 0.95, 18, 18);
-        pop();
-
-        pop();
-      }
+    function drawTriangle(s, inv) {
+      beginShape();
+      let m = inv ? 1 : -1;
+      vertex(0, 1.1 * s * m);
+      vertex(-0.95 * s, -0.6 * s * m);
+      vertex(0.95 * s, -0.6 * s * m);
+      endShape(CLOSE);
     }
 
-    function drawYantraTriangle(size, inverted) {
+    function drawPetals(baseRadius, shapeInfo, intensity, pulse, phase, i, j) {
       beginShape();
-      let m = inverted ? 1 : -1;
-      vertex(0, 1 * size * m);
-      vertex(-0.86 * size, -0.5 * size * m);
-      vertex(0.86 * size, -0.5 * size * m);
+      for (let angle = 0; angle < TWO_PI + 0.1; angle += 0.05) {
+        let r;
+        if (i === 5) { 
+          // Adjust base radius for Ajna wings to stay within scale
+          // Subtracting the wing protrusion from the base to normalize the total diameter
+          let maxWingSize = (40 + intensity * 20);
+          let wingShape = pow(abs(cos(angle)), 0.6) * maxWingSize;
+          r = (baseRadius - maxWingSize * 0.5) + wingShape + (pulse * 5);
+        } else {
+          let petalShape = sin(angle * shapeInfo.petals) * (15 + intensity * 25);
+          let baseMod = shapeInfo.sides > 0 ? cos(angle * shapeInfo.sides) * (8 + intensity * 15) : 0;
+          r = baseRadius + petalShape + baseMod + (pulse * 5);
+        }
+        let x = r * cos(angle);
+        let y = r * sin(angle);
+        let z = sin(angle * 2 + phase) * 20;
+        vertex(x, y, z);
+      }
       endShape(CLOSE);
+    }
+
+    function draw() {
+      background(1, 1, 4); 
+      
+      noStroke();
+      for(let p of particles) {
+        p.x += p.velX; p.y += p.velY;
+        if (abs(p.x) > 4000) p.x *= -0.99; if (abs(p.y) > 4000) p.y *= -0.99;
+        fill(255, p.alpha * map(sin(frameCount * 0.03 + p.x), -1, 1, 0.5, 1));
+        push(); translate(p.x, p.y, p.z); ellipse(0, 0, p.size, p.size); pop();
+      }
+
+      let camX = sin(frameCount * 0.002) * 60;
+      let camY = cos(frameCount * 0.001) * 40;
+      translate(width * 0.25 + camX, camY, -1600); 
+      
+      let intensity = map(parseFloat(newsData[currentIndex]?.score || 0), -15, 15, 0.3, 0.6);
+
+      // SHARED ENERGY COLUMN (Filaments)
+      strokeWeight(0.5);
+      for(let k=0; k<3; k++) {
+        stroke(100, 255, 200, 40);
+        let xOff = sin(frameCount * 0.01 + k) * 30;
+        line(xOff, -1200, xOff, 1200);
+      }
+
+      for (let i = 0; i < 7; i++) {
+        let m = chakraMovementData[i];
+        push();
+        
+        let breath = sin(frameCount * 0.005) * 20;
+        let wave = sin(frameCount * 0.012 - m.floatPhase) * 40;
+        translate(0, anatomicalY[i] + breath + wave, 0);
+
+        let phase = frameCount * 0.005 + (i * 0.8);
+        let pulse = sin(phase);
+        let c = colors[i];
+        let shapeInfo = chakraShapes[i];
+
+        rotateY(frameCount * m.rotSpeed + (i * 0.2));
+        rotateX(0.35 + sin(frameCount * 0.008 + m.floatPhase) * 0.1); 
+
+        noFill();
+        strokeWeight(2.0); 
+        
+        for (let j = 0; j < 3; j++) {
+          let baseRadius = 120 + (j * 30);
+          let ripple = map(sin(phase * 1.5 - j * 1.0), -1, 1, 0.7, 1.0);
+          stroke(c[0], c[1], c[2], 255 * ripple); 
+          drawPetals(baseRadius, shapeInfo, intensity, pulse, phase, i, j);
+        }
+
+        // Core Shapes
+        push();
+        fill(c[0], c[1], c[2], 230 + (pulse * 25));
+        noStroke();
+        rotateZ(frameCount * 0.005);
+        let sz = 35 + (pulse * 5); 
+
+        if (i === 0) box(sz); 
+        else if (i === 1) { rotateZ(HALF_PI); arc(0, 0, sz * 1.5, sz * 1.5, 0, PI); } 
+        else if (i === 2) drawTriangle(sz, true); 
+        else if (i === 3) { drawTriangle(sz, true); drawTriangle(sz, false); } 
+        else if (i === 4) ellipse(0, 0, sz * 1.2, sz * 1.2); 
+        else if (i === 5) drawTriangle(sz, true); 
+        else if (i === 6) sphere(sz * 0.8, 24, 24); 
+        pop();
+        
+        pop();
+      }
     }
 
     function windowResized() { resizeCanvas(windowWidth, windowHeight); }
