@@ -2,13 +2,8 @@
   "global_summary": "SYNTHETIC EQUILIBRIUM",
   "articles": [
     {
-      "title": "First personalized CRISPR treatment successfully cures rare genetic disorder.",
-      "score": 8.8,
-      "state": "GOLD"
-    },
-    {
-      "title": "Global High Seas Treaty officially ratified, protecting 30% of world oceans.",
-      "score": 8.0,
+      "title": "Artemis II completes lunar flyby, marking humanity's return to deep space.",
+      "score": 9.2,
       "state": "GOLD"
     },
     {
@@ -17,8 +12,13 @@
       "state": "GOLD"
     },
     {
-      "title": "Artemis II completes lunar flyby, marking humanity's return to deep space.",
-      "score": 9.2,
+      "title": "First personalized CRISPR treatment successfully cures rare genetic disorder.",
+      "score": 8.8,
+      "state": "GOLD"
+    },
+    {
+      "title": "Global High Seas Treaty officially ratified, protecting 30% of world oceans.",
+      "score": 8.0,
       "state": "GOLD"
     }
   ],
