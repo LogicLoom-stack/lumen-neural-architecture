@@ -2,6 +2,11 @@
   "global_summary": "SYNTHETIC EQUILIBRIUM",
   "articles": [
     {
+      "title": "Quantum-assisted carbon capture reaching 95% efficiency in European pilots.",
+      "score": 7.5,
+      "state": "GOLD"
+    },
+    {
       "title": "Global High Seas Treaty officially ratified, protecting 30% of world oceans.",
       "score": 8.0,
       "state": "GOLD"
@@ -9,11 +14,6 @@
     {
       "title": "Artemis II completes lunar flyby, marking humanity's return to deep space.",
       "score": 9.2,
-      "state": "GOLD"
-    },
-    {
-      "title": "Quantum-assisted carbon capture reaching 95% efficiency in European pilots.",
-      "score": 7.5,
       "state": "GOLD"
     },
     {
