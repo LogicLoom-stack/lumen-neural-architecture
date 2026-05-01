@@ -2,23 +2,8 @@
   "global_summary": "SYNTHETIC EQUILIBRIUM",
   "articles": [
     {
-      "title": "Global High Seas Treaty officially ratified, protecting 30% of world oceans.",
-      "score": 8.0,
-      "state": "GOLD"
-    },
-    {
-      "title": "Artemis II completes lunar flyby, marking humanity's return to deep space.",
-      "score": 9.2,
-      "state": "GOLD"
-    },
-    {
-      "title": "WMO warns planet's climate is more out of balance than ever.",
-      "score": -9.5,
-      "state": "RED"
-    },
-    {
-      "title": "Ultra-processed food links to surge in cardiovascular cases among youth.",
-      "score": -6.0,
+      "title": "Geoeconomic confrontation cited as top risk for 2026 stability.",
+      "score": -7.5,
       "state": "RED"
     },
     {
@@ -27,8 +12,13 @@
       "state": "RED"
     },
     {
-      "title": "Geoeconomic confrontation cited as top risk for 2026 stability.",
-      "score": -7.5,
+      "title": "Ultra-processed food links to surge in cardiovascular cases among youth.",
+      "score": -6.0,
+      "state": "RED"
+    },
+    {
+      "title": "WMO warns planet's climate is more out of balance than ever.",
+      "score": -9.5,
       "state": "RED"
     }
   ],
