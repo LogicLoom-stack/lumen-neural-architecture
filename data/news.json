@@ -7,19 +7,29 @@
       "state": "RED"
     },
     {
+      "title": "WMO warns planet's climate is more out of balance than ever.",
+      "score": -9.5,
+      "state": "RED"
+    },
+    {
+      "title": "Companies shift AI focus from 'hype' to measurable ROI.",
+      "score": -0.5,
+      "state": "RAINBOW"
+    },
+    {
       "title": "Ultra-processed food links to surge in cardiovascular cases among youth.",
       "score": -6.0,
       "state": "RED"
     },
     {
-      "title": "Geoeconomic confrontation cited as top risk for 2026 stability.",
-      "score": -7.5,
-      "state": "RED"
+      "title": "First personalized CRISPR treatment successfully cures rare genetic disorder.",
+      "score": 8.8,
+      "state": "GOLD"
     },
     {
-      "title": "WMO warns planet's climate is more out of balance than ever.",
-      "score": -9.5,
-      "state": "RED"
+      "title": "Artemis II completes lunar flyby, marking humanity's return to deep space.",
+      "score": 9.2,
+      "state": "GOLD"
     }
   ],
   "ml_metrics": {
