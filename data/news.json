@@ -2,13 +2,8 @@
   "global_summary": "SYNTHETIC EQUILIBRIUM",
   "articles": [
     {
-      "title": "NASA Nancy Grace Roman Telescope fully assembled and awaiting fall launch.",
-      "score": 1.2,
-      "state": "RAINBOW"
-    },
-    {
-      "title": "New 'folding' hardware forms dominate the 2026 mobile market.",
-      "score": 0.8,
+      "title": "Global growth projected at steady 3.3% for 2026.",
+      "score": 0.0,
       "state": "RAINBOW"
     },
     {
@@ -17,8 +12,13 @@
       "state": "RAINBOW"
     },
     {
-      "title": "Global growth projected at steady 3.3% for 2026.",
-      "score": 0.0,
+      "title": "New 'folding' hardware forms dominate the 2026 mobile market.",
+      "score": 0.8,
+      "state": "RAINBOW"
+    },
+    {
+      "title": "NASA Nancy Grace Roman Telescope fully assembled and awaiting fall launch.",
+      "score": 1.2,
       "state": "RAINBOW"
     }
   ],
