@@ -2,24 +2,34 @@
   "global_summary": "SYNTHETIC EQUILIBRIUM",
   "articles": [
     {
+      "title": "Geoeconomic confrontation cited as top risk for 2026 stability.",
+      "score": -7.5,
+      "state": "RED"
+    },
+    {
+      "title": "Artemis II completes lunar flyby, marking humanity's return to deep space.",
+      "score": 9.2,
+      "state": "GOLD"
+    },
+    {
+      "title": "Ultra-processed food links to surge in cardiovascular cases among youth.",
+      "score": -6.0,
+      "state": "RED"
+    },
+    {
+      "title": "WMO warns planet's climate is more out of balance than ever.",
+      "score": -9.5,
+      "state": "RED"
+    },
+    {
       "title": "Companies shift AI focus from 'hype' to measurable ROI.",
       "score": -0.5,
       "state": "RAINBOW"
     },
     {
-      "title": "NASA Nancy Grace Roman Telescope fully assembled and awaiting fall launch.",
-      "score": 1.2,
-      "state": "RAINBOW"
-    },
-    {
-      "title": "New 'folding' hardware forms dominate the 2026 mobile market.",
-      "score": 0.8,
-      "state": "RAINBOW"
-    },
-    {
-      "title": "Global growth projected at steady 3.3% for 2026.",
-      "score": 0.0,
-      "state": "RAINBOW"
+      "title": "Global High Seas Treaty officially ratified, protecting 30% of world oceans.",
+      "score": 8.0,
+      "state": "GOLD"
     }
   ],
   "ml_metrics": {
