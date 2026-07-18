@@ -7,18 +7,28 @@
       "state": "RED"
     },
     {
+      "title": "NASA Nancy Grace Roman Telescope fully assembled and awaiting fall launch.",
+      "score": 1.2,
+      "state": "RAINBOW"
+    },
+    {
       "title": "Major 1.5\u00b0C climate overshoot predicted for the 2025-2029 window.",
       "score": -8.8,
       "state": "RED"
     },
     {
-      "title": "Geoeconomic confrontation cited as top risk for 2026 stability.",
-      "score": -7.5,
-      "state": "RED"
+      "title": "Companies shift AI focus from 'hype' to measurable ROI.",
+      "score": -0.5,
+      "state": "RAINBOW"
     },
     {
-      "title": "WMO warns planet's climate is more out of balance than ever.",
-      "score": -9.5,
+      "title": "Global High Seas Treaty officially ratified, protecting 30% of world oceans.",
+      "score": 8.0,
+      "state": "GOLD"
+    },
+    {
+      "title": "Geoeconomic confrontation cited as top risk for 2026 stability.",
+      "score": -7.5,
       "state": "RED"
     }
   ],
