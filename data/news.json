@@ -2,13 +2,8 @@
   "global_summary": "SYNTHETIC EQUILIBRIUM",
   "articles": [
     {
-      "title": "Major 1.5\u00b0C climate overshoot predicted for the 2025-2029 window.",
-      "score": -8.8,
-      "state": "RED"
-    },
-    {
-      "title": "Geoeconomic confrontation cited as top risk for 2026 stability.",
-      "score": -7.5,
+      "title": "Ultra-processed food links to surge in cardiovascular cases among youth.",
+      "score": -6.0,
       "state": "RED"
     },
     {
@@ -17,8 +12,13 @@
       "state": "RED"
     },
     {
-      "title": "Ultra-processed food links to surge in cardiovascular cases among youth.",
-      "score": -6.0,
+      "title": "Geoeconomic confrontation cited as top risk for 2026 stability.",
+      "score": -7.5,
+      "state": "RED"
+    },
+    {
+      "title": "Major 1.5\u00b0C climate overshoot predicted for the 2025-2029 window.",
+      "score": -8.8,
       "state": "RED"
     }
   ],
