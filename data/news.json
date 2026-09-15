@@ -2,13 +2,8 @@
   "global_summary": "SYNTHETIC EQUILIBRIUM",
   "articles": [
     {
-      "title": "New 'folding' hardware forms dominate the 2026 mobile market.",
-      "score": 0.8,
-      "state": "RAINBOW"
-    },
-    {
-      "title": "Companies shift AI focus from 'hype' to measurable ROI.",
-      "score": -0.5,
+      "title": "NASA Nancy Grace Roman Telescope fully assembled and awaiting fall launch.",
+      "score": 1.2,
       "state": "RAINBOW"
     },
     {
@@ -17,8 +12,13 @@
       "state": "RAINBOW"
     },
     {
-      "title": "NASA Nancy Grace Roman Telescope fully assembled and awaiting fall launch.",
-      "score": 1.2,
+      "title": "Companies shift AI focus from 'hype' to measurable ROI.",
+      "score": -0.5,
+      "state": "RAINBOW"
+    },
+    {
+      "title": "New 'folding' hardware forms dominate the 2026 mobile market.",
+      "score": 0.8,
       "state": "RAINBOW"
     }
   ],
