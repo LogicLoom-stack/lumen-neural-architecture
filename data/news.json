@@ -2,11 +2,6 @@
   "global_summary": "SYNTHETIC EQUILIBRIUM",
   "articles": [
     {
-      "title": "Major 1.5\u00b0C climate overshoot predicted for the 2025-2029 window.",
-      "score": -8.8,
-      "state": "RED"
-    },
-    {
       "title": "Ultra-processed food links to surge in cardiovascular cases among youth.",
       "score": -6.0,
       "state": "RED"
@@ -19,6 +14,11 @@
     {
       "title": "WMO warns planet's climate is more out of balance than ever.",
       "score": -9.5,
+      "state": "RED"
+    },
+    {
+      "title": "Major 1.5\u00b0C climate overshoot predicted for the 2025-2029 window.",
+      "score": -8.8,
       "state": "RED"
     }
   ],
